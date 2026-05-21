@@ -1,13 +1,9 @@
-﻿<!DOCTYPE html>
+﻿<!DOCTYPE html><script src="/__replco/static/devtools/injected.js"onerror="parent.postMessage({event:'error',payload:'script.onerror: Failed to load '+event.target.src},'https://replit.com')"></script>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
-
-    <script type='text/javascript'>
+<script type='text/javascript'>
 // Disable Right Click
 document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -21,9 +17,6 @@ document.onkeydown = function (e) {
   }
 }
 </script>
-  
-  <script type="module" src="/@vite/client"></script>
-
   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -131,8 +124,33 @@ document.onkeydown = function (e) {
     .prev-btn { left:10px; }
     .next-btn { right:10px; }
     .current-view { background:#3a3a3a; padding:8px 0; overflow:hidden; white-space:nowrap; }
-    .current-view-text { display:inline-block; color:#f0ece4; font-size:0.85rem; font-weight:500; animation:ticker 40s linear infinite; will-change:transform; }
+    .ticker-track { display:inline-flex; white-space:nowrap; animation:ticker 40s linear infinite; will-change:transform; }
+    .ticker-item { display:inline-block; white-space:nowrap; color:#f0ece4; font-size:0.85rem; font-weight:500; padding-right:60px; }
     @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    /* ── Recently Watched / Watchlist Section ── */
+    .watchlist-section{padding:12px 0 6px 0;}
+    .watchlist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .watchlist-title{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1.8px;display:flex;align-items:center;gap:7px;}
+    .watchlist-title i{color:#F26207;font-size:0.75rem;}
+    .watchlist-clear-btn{background:none;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.35);font-size:0.68rem;font-family:'Roboto',sans-serif;cursor:pointer;padding:3px 10px;border-radius:20px;transition:all 0.2s;letter-spacing:0.3px;}
+    .watchlist-clear-btn:hover{color:#F26207;border-color:rgba(242,98,7,0.4);background:rgba(242,98,7,0.08);}
+    .watchlist-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;cursor:grab;user-select:none;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+    .watchlist-scroll::-webkit-scrollbar{display:none;}
+    .watchlist-scroll.is-dragging{cursor:grabbing;}
+    .watchlist-item{flex:0 0 auto;width:76px;position:relative;cursor:pointer;transition:transform 0.2s ease;}
+    .watchlist-item:hover{transform:translateY(-4px) scale(1.05);}
+    .watchlist-poster{width:76px;height:114px;object-fit:cover;border-radius:8px;display:block;border:2px solid rgba(255,255,255,0.08);box-shadow:0 4px 12px rgba(0,0,0,0.4);}
+    .watchlist-poster-fallback{width:76px;height:114px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:1.4rem;border:2px solid rgba(255,255,255,0.08);}
+    .wl-type-badge{position:absolute;top:5px;left:5px;font-size:0.52rem;font-weight:700;padding:2px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px;backdrop-filter:blur(4px);}
+    .wl-type-badge.movie{background:rgba(0,121,242,0.85);color:#fff;}
+    .wl-type-badge.tv{background:rgba(242,98,7,0.85);color:#fff;}
+    .wl-item-title{font-size:0.62rem;color:rgba(255,255,255,0.5);text-align:center;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:76px;line-height:1.3;}
+    @media(max-width:600px){
+      .watchlist-item{width:calc((100vw - 72px)/4);}
+      .watchlist-poster{width:100%;height:calc(((100vw - 72px)/4)*1.5);}
+      .watchlist-poster-fallback{width:100%;height:calc(((100vw - 72px)/4)*1.5);}
+      .wl-item-title{max-width:100%;}
+    }
     .main-search-container { display:flex; align-items:center; gap:15px; padding:20px 0 0 0; }
     .big-search-bar { flex:1; position:relative; }
     .big-search-input { width:100%; padding:18px 130px 18px 25px; font-size:1.1rem; font-family:'Roboto',sans-serif; background:linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.08)); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); border:2px solid rgba(255,255,255,0.2); border-radius:50px; color:white; outline:none; transition:border-color 0.3s ease; box-shadow:0 8px 32px rgba(0,0,0,0.3); }
@@ -575,7 +593,7 @@ document.onkeydown = function (e) {
     }
     .slider-btn { background: rgba(0,0,0,0.5) !important; }
     .current-view { background: #86898e !important; }
-    .current-view-text { color: #ffffff !important; }
+    .ticker-item { color: #ffffff !important; }
     .big-search-input {
       background: rgba(255,255,255,0.95) !important;
       border: 2px solid rgba(0,0,0,0.12) !important;
@@ -844,11 +862,7 @@ document.onkeydown = function (e) {
   </div>
 
   <div class="current-view" id="currentView">
-    <span class="current-view-text">
-      এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো! • আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।
-      &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
-      এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো! • আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।
-    </span>
+    <div class="ticker-track"><span class="ticker-item">এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।  •  এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।  •  এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।  •  এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।</span><span class="ticker-item">এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।  •  এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।  •  এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।  •  এখানেই পাবেন আপনার পছন্দের সব মুভি ও টিভি শো!  •  আপনার প্রিয় যেকোনো মুভি বা টিভি শো সার্চ করুন এবং দেখুন সরাসরি—কোনো ঝামেলা ছাড়াই।</span></div>
   </div>
 
   <div class="container">
@@ -944,6 +958,15 @@ document.onkeydown = function (e) {
           <i class="fas fa-compass"></i> Discover
         </button>
       </div>
+    </div>
+
+    <!-- Recently Watched Watchlist -->
+    <div class="watchlist-section" id="watchlistSection" style="display:none;">
+      <div class="watchlist-header">
+        <div class="watchlist-title"><i class="fas fa-history"></i> Recently Watched</div>
+        <button class="watchlist-clear-btn" id="watchlistClearBtn">Clear All</button>
+      </div>
+      <div class="watchlist-scroll" id="watchlistScroll"></div>
     </div>
 
     <!-- Person / Cast Banner -->
@@ -1396,26 +1419,47 @@ document.onkeydown = function (e) {
     (function(){
       const slider=document.getElementById('logoSlider');
       let isDragging=false,startX=0,startScroll=0,dragged=false;
+      let velX=0,lastX=0,lastTime=0,rafId=null;
 
-      /* Mouse */
-      slider.addEventListener('mousedown',e=>{
-        isDragging=true; dragged=false;
-        startX=e.pageX-slider.offsetLeft;
-        startScroll=slider.scrollLeft;
+      function momentumScroll(){
+        velX*=0.92;
+        if(Math.abs(velX)<0.5){ velX=0; return; }
+        slider.scrollLeft+=velX;
+        rafId=requestAnimationFrame(momentumScroll);
+      }
+
+      function startDrag(clientX){
+        if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+        isDragging=true; dragged=false; velX=0;
+        startX=clientX; startScroll=slider.scrollLeft;
+        lastX=clientX; lastTime=performance.now();
         slider.classList.add('dragging');
-      });
-      window.addEventListener('mousemove',e=>{
+      }
+
+      function moveDrag(clientX){
         if(!isDragging) return;
-        e.preventDefault();
-        const x=e.pageX-slider.offsetLeft;
-        const walk=(x-startX)*1.2;
+        const now=performance.now();
+        const dt=now-lastTime||1;
+        const dx=clientX-lastX;
+        velX=dx/(dt/16);          // pixels per frame at 60fps
+        lastX=clientX; lastTime=now;
+        const walk=clientX-startX;
         if(Math.abs(walk)>4) dragged=true;
         slider.scrollLeft=startScroll-walk;
-      });
-      window.addEventListener('mouseup',()=>{
+      }
+
+      function endDrag(){
+        if(!isDragging) return;
         isDragging=false;
         slider.classList.remove('dragging');
-      });
+        if(Math.abs(velX)>1) rafId=requestAnimationFrame(momentumScroll);
+      }
+
+      /* Mouse */
+      slider.addEventListener('mousedown',e=>{ e.preventDefault(); startDrag(e.clientX); });
+      window.addEventListener('mousemove',e=>{ if(!isDragging) return; moveDrag(e.clientX); });
+      window.addEventListener('mouseup',()=>endDrag());
+
       /* Prevent click-through on logos after a drag */
       slider.addEventListener('click',e=>{
         if(dragged){ e.stopPropagation(); e.preventDefault(); dragged=false; }
@@ -1423,16 +1467,12 @@ document.onkeydown = function (e) {
 
       /* Touch */
       slider.addEventListener('touchstart',e=>{
-        startX=e.touches[0].pageX-slider.offsetLeft;
-        startScroll=slider.scrollLeft;
-        dragged=false;
+        startDrag(e.touches[0].clientX);
       },{passive:true});
       slider.addEventListener('touchmove',e=>{
-        const x=e.touches[0].pageX-slider.offsetLeft;
-        const walk=(x-startX)*1.2;
-        if(Math.abs(walk)>4) dragged=true;
-        slider.scrollLeft=startScroll-walk;
+        moveDrag(e.touches[0].clientX);
       },{passive:true});
+      slider.addEventListener('touchend',()=>endDrag(),{passive:true});
     })();
     function incrementYear(amount){ const yearInput=document.getElementById('yearFilter'); let currentValue=parseInt(yearInput.value)||new Date().getFullYear(); yearInput.value=Math.max(1900,Math.min(2030,currentValue+amount)); }
 
@@ -1634,8 +1674,92 @@ document.onkeydown = function (e) {
       } catch(error){ console.error('Error fetching movie details:',error); showToast('Error loading movie details.','error'); }
     }
 
+    /* ── Watch History helpers ── */
+    function addToWatchHistory(details,isTV){
+      const id=details.id;
+      const title=isTV?details.name:details.title;
+      const poster=details.poster_path?`https://image.tmdb.org/t/p/w342${details.poster_path}`:'';
+      const type=isTV?'tv':'movie';
+      let history=JSON.parse(localStorage.getItem('gtc_watch_history')||'[]');
+      history=history.filter(i=>!(i.id===id&&i.type===type));
+      history.unshift({id,title,poster,type,ts:Date.now()});
+      if(history.length>20) history=history.slice(0,20);
+      localStorage.setItem('gtc_watch_history',JSON.stringify(history));
+      renderWatchlist();
+    }
+    function renderWatchlist(){
+      const history=JSON.parse(localStorage.getItem('gtc_watch_history')||'[]');
+      const section=document.getElementById('watchlistSection');
+      const scroll=document.getElementById('watchlistScroll');
+      if(!section||!scroll) return;
+      if(history.length===0){section.style.display='none';return;}
+      section.style.display='block';
+      scroll.innerHTML='';
+      history.forEach(item=>{
+        const el=document.createElement('div');
+        el.className='watchlist-item';
+        el.title=item.title;
+        const posterHtml=item.poster
+          ?`<img class="watchlist-poster" src="${item.poster}" alt="${item.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="watchlist-poster-fallback" style="display:none"><i class="fas fa-film"></i></div>`
+          :`<div class="watchlist-poster-fallback"><i class="fas fa-film"></i></div>`;
+        el.innerHTML=`${posterHtml}<div class="wl-type-badge ${item.type}">${item.type==='tv'?'TV':'Film'}</div><div class="wl-item-title">${item.title}</div>`;
+        el.addEventListener('click',()=>fetchAndShowMovieDetails(item.id,item.type==='tv'));
+        scroll.appendChild(el);
+      });
+      initWatchlistDrag();
+    }
+    function initWatchlistDrag(){
+      const el=document.getElementById('watchlistScroll');
+      if(!el||el._dragInit) return;
+      el._dragInit=true;
+      let isDragging=false,startX=0,startScroll=0,dragged=false;
+      let velX=0,lastX=0,lastTime=0,rafId=null;
+      function momentumScroll(){
+        velX*=0.92;
+        if(Math.abs(velX)<0.5){velX=0;return;}
+        el.scrollLeft+=velX;
+        rafId=requestAnimationFrame(momentumScroll);
+      }
+      function startDrag(clientX){
+        if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+        isDragging=true;dragged=false;velX=0;
+        startX=clientX;startScroll=el.scrollLeft;
+        lastX=clientX;lastTime=performance.now();
+        el.classList.add('is-dragging');
+      }
+      function moveDrag(clientX){
+        if(!isDragging) return;
+        const now=performance.now();
+        const dt=now-lastTime||1;
+        const dx=clientX-lastX;
+        velX=dx/(dt/16);
+        lastX=clientX;lastTime=now;
+        const walk=clientX-startX;
+        if(Math.abs(walk)>4) dragged=true;
+        el.scrollLeft=startScroll-walk;
+      }
+      function endDrag(){
+        if(!isDragging) return;
+        isDragging=false;
+        el.classList.remove('is-dragging');
+        if(Math.abs(velX)>1) rafId=requestAnimationFrame(momentumScroll);
+      }
+      /* Mouse — window-level so drag works even when cursor leaves the row */
+      el.addEventListener('mousedown',e=>{e.preventDefault();startDrag(e.clientX);});
+      window.addEventListener('mousemove',e=>{if(!isDragging)return;moveDrag(e.clientX);});
+      window.addEventListener('mouseup',()=>endDrag());
+      /* Prevent accidental click-through on items after dragging */
+      el.addEventListener('click',e=>{if(dragged){e.stopPropagation();e.preventDefault();dragged=false;}},true);
+      /* Touch */
+      el.addEventListener('touchstart',e=>{startDrag(e.touches[0].clientX);},{passive:true});
+      el.addEventListener('touchmove',e=>{moveDrag(e.touches[0].clientX);},{passive:true});
+      el.addEventListener('touchend',()=>endDrag(),{passive:true});
+    }
+    document.getElementById('watchlistClearBtn')&&document.getElementById('watchlistClearBtn').addEventListener('click',()=>{localStorage.removeItem('gtc_watch_history');document.getElementById('watchlistSection').style.display='none';});
+
     function showMovieDetails(details,credits,external,isTV){
       state.currentMovieData={details,credits,external,isTV};
+      addToWatchHistory(details,isTV);
       const movieDetailsPage=document.getElementById('movieDetailsPage');
       document.getElementById('detailsPoster').src=details.poster_path?`https://image.tmdb.org/t/p/w500${details.poster_path}`:'';
       document.getElementById('detailsTitle').textContent=isTV?details.name:details.title;
@@ -1654,7 +1778,7 @@ document.onkeydown = function (e) {
       episodeSelector.classList.toggle('show',isTV);
       if(isTV){ document.getElementById('seasonInput').value=1; document.getElementById('episodeInput').value=1; }
       updateEditIconsVisibility(); checkDownloadUrl(details.id,isTV); updateCustomSourceForCurrentMovie(details.id,isTV);
-      movieDetailsPage.classList.add('active'); document.body.style.overflow='hidden'; movieDetailsPage.scrollTo(0,0);
+      movieDetailsPage.classList.add('active'); document.body.style.overflow='hidden'; document.documentElement.style.overflow='hidden'; movieDetailsPage.scrollTo(0,0);
       const movieTitle=isTV?details.name:details.title;
       const posterUrl=details.poster_path?`https://image.tmdb.org/t/p/w500${details.poster_path}`:'https://i.postimg.cc/d3TVYCTL/icon.png';
       updateOGMetaTags({title:movieTitle,description:details.overview||'',imageUrl:posterUrl,pageUrl:window.location.href});
@@ -1699,7 +1823,7 @@ document.onkeydown = function (e) {
       if(!movieDetailsPage.classList.contains('active')) return;
       movieDetailsPage.classList.remove('active');
       document.getElementById('moviePlayer').src='';
-      document.body.style.overflow='auto';
+      document.body.style.overflow='auto'; document.documentElement.style.overflow='';
       state.currentMovieData=null; state.isTrailerPlaying=false; requestAnimationFrame(()=>{ if(movieContainer.querySelectorAll('.movie-card').length===0){ state.isMainGridLoaded=false; resetAndLoadMovies(); } });
       updateOGMetaTags({title:null,description:null,imageUrl:null,pageUrl:null});
       if(state.savedScrollY>0){ requestAnimationFrame(()=>window.scrollTo({top:state.savedScrollY,behavior:'instant'})); }
@@ -1727,7 +1851,7 @@ document.onkeydown = function (e) {
       personPage.dataset.personId=personId;
       const personLoading=document.getElementById('personLoading');
       personPage.classList.add('active'); personLoading.style.display='block';
-      document.getElementById('personDetailsContent').innerHTML=''; document.body.style.overflow='hidden';
+      document.getElementById('personDetailsContent').innerHTML=''; document.body.style.overflow='hidden'; document.documentElement.style.overflow='hidden';
       try {
         const[personRes,creditsRes]=await Promise.all([fetch(`https://api.themoviedb.org/3/person/${personId}?api_key=${API_KEY}&language=en-US`),fetch(`https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${API_KEY}&language=en-US`)]);
         const[person,credits]=await Promise.all([personRes.json(),creditsRes.json()]);
@@ -1745,13 +1869,31 @@ document.onkeydown = function (e) {
       const uniqueWorks=allWorks.filter((work,index,self)=>work.id&&self.findIndex(w=>w.id===work.id)===index);
       uniqueWorks.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
       displayMovies(uniqueWorks,false,'personMovieGrid');
+      // Override card clicks inside person filmography: close person page then open movie details
+      requestAnimationFrame(()=>{
+        const grid=document.getElementById('personMovieGrid');
+        if(!grid) return;
+        grid.addEventListener('click',(e)=>{
+          const card=e.target.closest('.movie-card');
+          if(!card) return;
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          const id=card.dataset.movieId;
+          const badge=card.querySelector('.content-type-badge');
+          const isTV=badge&&badge.textContent.trim()==='TV';
+          closePersonDetails();
+          fetchAndShowMovieDetails(id,isTV);
+        },true);
+      });
     }
 
     function closePersonDetails(){
       const personPage=document.getElementById('personDetailsPage');
       if(!personPage.classList.contains('active')) return;
       personPage.classList.remove('active'); personPage.removeAttribute('data-person-id');
-      document.body.style.overflow=document.getElementById('movieDetailsPage').classList.contains('active')?'hidden':'auto';
+      const movieOpen=document.getElementById('movieDetailsPage').classList.contains('active');
+      document.body.style.overflow=movieOpen?'hidden':'auto';
+      document.documentElement.style.overflow=movieOpen?'hidden':'';
     }
 
     const debouncedSearch=debounce(()=>{
@@ -1861,6 +2003,7 @@ document.onkeydown = function (e) {
       document.getElementById('personBannerClose').addEventListener('click',()=>{ exitPersonMode(); mainSearchInput.value=''; state.currentQuery=''; state.currentPlatform=''; window.location.hash=''; resetAndLoadMovies(); });
       document.getElementById('discoverBtn').addEventListener('click',()=>{ state.currentLanguage=document.getElementById('languageSelect').value; state.currentGenre=document.getElementById('genreSelect').value; state.currentSort=document.getElementById('sortBy').value; state.currentYear=document.getElementById('yearFilter').value; state.currentPlatform=''; state.currentQuery=''; mainSearchInput.value=''; window.location.hash=''; resetAndLoadMovies(); });
       document.getElementById('moviesBtn').addEventListener('click',()=>switchContentType('movies'));
+      renderWatchlist();
       document.getElementById('tvBtn').addEventListener('click',()=>switchContentType('tv'));
       document.querySelectorAll('.platform-logo').forEach(logo=>{ logo.addEventListener('click',()=>applyPlatformFilter(logo.dataset.platform)); });
       userBtn.addEventListener('click',toggleUserPopup);
@@ -1889,7 +2032,7 @@ document.onkeydown = function (e) {
       embedSaveBtn.addEventListener('click',saveCustomEmbedUrl);
       embedCancelBtn.addEventListener('click',closeEmbedEditModal);
       document.getElementById('closeDetailsBtn').addEventListener('click',()=>{ closeMovieDetails(); window.history.replaceState('',document.title,window.location.pathname+window.location.search); });
-      document.getElementById('closePersonDetailsBtn').addEventListener('click',()=>{ window.history.back(); });
+      document.getElementById('closePersonDetailsBtn').addEventListener('click',()=>{ closePersonDetails(); });
       document.getElementById('playEpisodeBtn').addEventListener('click',()=>{ exitTrailerMode(); updateVideoPlayer(); });
       document.querySelectorAll('.source-icon').forEach(icon=>{ icon.addEventListener('click',()=>{ if(state.isTrailerPlaying) exitTrailerMode(); state.currentVideoSource=parseInt(icon.dataset.source); updateSourceSelector(); updateVideoPlayer(); }); });
       document.getElementById('mainSearchBtn').addEventListener('click',()=>{ const query=mainSearchInput.value.trim(); if(query===state.currentQuery) return; state.currentQuery=query; state.currentPlatform=''; window.location.hash=''; resetAndLoadMovies(); });
