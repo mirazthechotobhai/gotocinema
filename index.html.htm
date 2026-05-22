@@ -1,6 +1,22 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script type='text/javascript'>
+// Disable Right Click
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+document.onkeydown = function (e) {
+  if (event.keyCode == 123 || 
+      (e.ctrlKey && e.shiftKey && e.keyCode == 73) || 
+      (e.ctrlKey && e.shiftKey && e.keyCode == 74) || 
+      (e.ctrlKey && e.keyCode == 85)) {
+    return false;
+  }
+}
+</script>
+
   <script type="module" src="/@vite/client"></script>
 
   <meta charset="UTF-8">
