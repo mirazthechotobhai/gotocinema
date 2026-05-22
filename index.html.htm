@@ -2,38 +2,57 @@
 <html lang="en">
 <head>
 
-<script type='text/javascript'>
-// Disable Right Click
-document.addEventListener('contextmenu', event => event.preventDefault());
-
-// Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-document.onkeydown = function (e) {
-  if (event.keyCode == 123 || 
-      (e.ctrlKey && e.shiftKey && e.keyCode == 73) || 
-      (e.ctrlKey && e.shiftKey && e.keyCode == 74) || 
-      (e.ctrlKey && e.keyCode == 85)) {
-    return false;
-  }
-}
-</script>
-
-  <script type="module" src="/@vite/client"></script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GO to Cinema - Watch Movies, TV Shows &amp; Anime</title>
-  <meta name="description" content="Stream your favorite movies, TV shows and anime with multiple sources. Watch the latest content online with high quality video streaming." />
-  <meta property="og:title" content="GOTOCINEMA.net - Watch Movies, TV Shows &amp; Anime" />
-  <meta property="og:description" content="Stream your favorite movies, TV shows and anime with multiple sources." />
-  <meta property="og:image" content="https://i.postimg.cc/d3TVYCTL/icon.png" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="GOTOCINEMA.net" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="GOTOCINEMA.net - Watch Movies, TV Shows &amp; Anime" />
-  <meta name="twitter:image" content="https://i.postimg.cc/d3TVYCTL/icon.png" />
-  <meta name="author" content="GOTOCINEMA.net" />
-  <meta name="robots" content="index, follow" />
-  <meta name="theme-color" content="#f5f7fa" />
+
+  <!-- Favicon for Google Search and Browser Tabs -->
+  <link rel="icon" href="https://i.postimg.cc/xCzV0GsF/icon.png" type="image/png">
+  <link rel="shortcut icon" href="https://i.postimg.cc/xCzV0GsF/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/xCzV0GsF/icon.png">
+
+  <!-- Title & SEO Description -->
+  <title>GO to Cinema | Stream Movies, TV Shows &amp; Anime</title>
+  <meta name="description" content="Stream your favorite Movies, TV shows and Anime with multiple sources. Watch the latest movies and TV series online with high quality video streaming.">
+
+  <!-- SEO Keywords -->
+  <meta name="keywords" content="gotocinema, go to cinema, goto cinema, watch movies online, stream movies free, watch tv shows online, anime streaming, online cinema, free movies, HD streaming, watch anime online, GotoCinema, Go To Cinema, GOTOCINEMA">
+  <meta name="author" content="GO to Cinema">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#1e1e1f">
+
+  <!-- Canonical Tag -->
+  <link rel="canonical" href="https://gotocinema.net">
+
+  <!-- Open Graph Tags -->
+  <meta property="og:title" content="GO to Cinema">
+  <meta property="og:description" content="Stream your favorite Movies, TV shows and Anime with multiple sources. Watch the latest movies and TV series online with high quality video streaming.">
+  <meta property="og:image" content="https://i.postimg.cc/xCzV0GsF/icon.png">
+  <meta property="og:url" content="https://gotocinema.net">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="GO to Cinema">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GO to Cinema | Stream Movies, TV Shows &amp; Anime">
+  <meta name="twitter:description" content="Stream your favorite Movies, TV shows and Anime with multiple sources. Watch the latest movies and TV series online with high quality video streaming.">
+  <meta name="twitter:image" content="https://i.postimg.cc/xCzV0GsF/icon.png">
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "GO to Cinema",
+    "alternateName": ["GotoCinema", "Goto Cinema", "gotocinema", "go to cinema", "goto cinema"],
+    "url": "https://gotocinema.net",
+    "description": "Stream your favorite Movies, TV shows and Anime with multiple sources. Watch the latest movies and TV series online with high quality video streaming.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://gotocinema.net/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -1856,6 +1875,4 @@ document.onkeydown = function (e) {
       mainSearchInput.addEventListener('keypress',(e)=>{ if(e.key==='Enter'){ closeSuggestions(); const query=mainSearchInput.value.trim(); if(query===state.currentQuery) return; state.currentQuery=query; state.currentPlatform=''; window.location.hash=''; resetAndLoadMovies(); } });
     });
   </script>
-
-<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="46384f58-8e5b-4575-a875-85ccd760f69d"></script></body>
-</html>
+  
