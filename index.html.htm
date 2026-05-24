@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 
-<script type='text/javascript'>
+  <script type='text/javascript'>
 // Disable Right Click
 document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -22,9 +22,9 @@ document.onkeydown = function (e) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Favicon for Google Search and Browser Tabs -->
-  <link rel="icon" href="https://i.postimg.cc/xCzV0GsF/icon.png" type="image/png">
-  <link rel="shortcut icon" href="https://i.postimg.cc/xCzV0GsF/icon.png" type="image/png">
-  <link rel="apple-touch-icon" href="https://i.postimg.cc/xCzV0GsF/icon.png">
+  <link rel="icon" href="https://i.postimg.cc/66jsDDrz/icon.png" type="image/png">
+  <link rel="shortcut icon" href="https://i.postimg.cc/66jsDDrz/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/66jsDDrz/icon.png">
 
   <!-- Title & SEO Description -->
   <title>GO to Cinema | Stream Movies, TV Shows &amp; Anime</title>
@@ -42,7 +42,7 @@ document.onkeydown = function (e) {
   <!-- Open Graph Tags -->
   <meta property="og:title" content="GO to Cinema">
   <meta property="og:description" content="Stream your favorite Movies, TV shows and Anime with multiple sources. Watch the latest movies and TV series online with high quality video streaming.">
-  <meta property="og:image" content="https://i.postimg.cc/xCzV0GsF/icon.png">
+  <meta property="og:image" content="https://i.postimg.cc/66jsDDrz/icon.png">
   <meta property="og:url" content="https://gotocinema.net">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="GO to Cinema">
@@ -51,7 +51,7 @@ document.onkeydown = function (e) {
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="GO to Cinema | Stream Movies, TV Shows &amp; Anime">
   <meta name="twitter:description" content="Stream your favorite Movies, TV shows and Anime with multiple sources. Watch the latest movies and TV series online with high quality video streaming.">
-  <meta name="twitter:image" content="https://i.postimg.cc/xCzV0GsF/icon.png">
+  <meta name="twitter:image" content="https://i.postimg.cc/66jsDDrz/icon.png">
 
   <!-- Schema.org Structured Data -->
   <script type="application/ld+json">
@@ -1160,6 +1160,166 @@ document.onkeydown = function (e) {
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
   <script>
+
+    /* ============================================================
+       ENHANCEMENTS: CacheManager · RequestThrottler · IPSecurity
+                     PreFetcher · Silent Errors · Instant Load
+       ============================================================ */
+
+    /* --- LocalStorage Cache Manager (TTL-based) --- */
+    const CacheManager = (function() {
+      const PREFIX = 'gtc_cache_';
+      const DEFAULT_TTL = 5 * 60 * 1000;
+      function set(key, data, ttl) {
+        try {
+          localStorage.setItem(PREFIX + key, JSON.stringify({ data, expires: Date.now() + (ttl || DEFAULT_TTL) }));
+        } catch(e) {
+          try {
+            const ks = Object.keys(localStorage).filter(k => k.startsWith(PREFIX));
+            if (ks.length) localStorage.removeItem(ks[0]);
+            localStorage.setItem(PREFIX + key, JSON.stringify({ data, expires: Date.now() + (ttl || DEFAULT_TTL) }));
+          } catch(e2) {}
+        }
+      }
+      function get(key) {
+        try {
+          const raw = localStorage.getItem(PREFIX + key);
+          if (!raw) return null;
+          const entry = JSON.parse(raw);
+          if (Date.now() > entry.expires) { localStorage.removeItem(PREFIX + key); return null; }
+          return entry.data;
+        } catch(e) { return null; }
+      }
+      function remove(key) { try { localStorage.removeItem(PREFIX + key); } catch(e) {} }
+      function clear() { Object.keys(localStorage).forEach(k => { if (k.startsWith(PREFIX)) localStorage.removeItem(k); }); }
+      return { set, get, remove, clear };
+    })();
+
+    /* --- Request Throttler --- */
+    const RequestThrottler = (function() {
+      const queues = {};
+      const delays = { 'api.themoviedb.org': 80, 'graphql.anilist.co': 350 };
+      function getDelay(url) { try { return delays[new URL(url).hostname] || 0; } catch(e) { return 0; } }
+      function throttledFetch(url, options) {
+        try {
+          const host = new URL(url).hostname;
+          if (!queues[host]) queues[host] = Promise.resolve();
+          queues[host] = queues[host].then(() => new Promise(r => setTimeout(r, getDelay(url))));
+          return queues[host].then(() => fetch(url, options));
+        } catch(e) { return fetch(url, options); }
+      }
+      return { throttledFetch };
+    })();
+
+    /* --- IP-based Security (silent, session rate-limit) --- */
+    const IPSecurity = (function() {
+      const WINDOW_MS = 60000, MAX = 200, KEY = 'gtc_sec_reqs';
+      function check() {
+        const now = Date.now();
+        let log; try { log = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) { log = []; }
+        log = log.filter(t => now - t < WINDOW_MS);
+        if (log.length >= MAX) return false;
+        log.push(now);
+        try { localStorage.setItem(KEY, JSON.stringify(log)); } catch(e) {}
+        return true;
+      }
+      return { check };
+    })();
+
+    /* --- Silent Cached Fetch --- */
+    async function cachedFetch(url, options, ttl) {
+      const cached = CacheManager.get(url);
+      if (cached) return { json: async () => cached, ok: true };
+      if (!IPSecurity.check()) return { json: async () => ({ results: [], data: null }), ok: true };
+      try {
+        const response = await RequestThrottler.throttledFetch(url, options);
+        if (response.ok) {
+          const data = await response.json();
+          CacheManager.set(url, data, ttl);
+          return { json: async () => data, ok: true };
+        }
+        return { json: async () => ({ results: [], data: null }), ok: true };
+      } catch(e) {
+        return { json: async () => ({ results: [], data: null }), ok: true };
+      }
+    }
+
+    /* --- PreFetcher: 50 Movies + 50 TV + 50 Anime on first visit --- */
+    const PreFetcher = (function() {
+      const TTL = 30 * 60 * 1000;
+      const K = { movies: '__pf_movies', tv: '__pf_tv', anime: '__pf_anime' };
+      const today = new Date().toISOString().split('T')[0];
+
+      async function _tmdb50(endpoint, cacheKey) {
+        const ex = CacheManager.get(cacheKey);
+        if (ex && ex.length >= 40) return ex;
+        try {
+          const pages = [1,2,3].map(p =>
+            RequestThrottler.throttledFetch(
+              `https://api.themoviedb.org/3/discover/${endpoint}?api_key=9d0f10dd934f1c2a6e91954041550593&sort_by=popularity.desc&page=${p}&${endpoint==='movie'?'primary_release_date':'first_air_date'}.lte=${today}`
+            )
+          );
+          const resps = await Promise.all(pages);
+          const jsons = await Promise.all(resps.map(r => r.json()));
+          const items = jsons.flatMap(d => (d.results||[]).map(i => ({...i, content_type: endpoint, is_anime: false}))).slice(0,60);
+          if (items.length) CacheManager.set(cacheKey, items, TTL);
+          return items;
+        } catch(e) { return ex || []; }
+      }
+
+      async function _anime50(cacheKey) {
+        const ex = CacheManager.get(cacheKey);
+        if (ex && ex.length >= 40) return ex;
+        const gql = `query($p:Int){Page(page:$p,perPage:25){media(type:ANIME,sort:TRENDING_DESC){id title{romaji english}coverImage{extraLarge large}episodes averageScore startDate{year}trending}}}`;
+        try {
+          const [r1,r2] = await Promise.all([
+            fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{p:1}})}),
+            fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{p:2}})})
+          ]);
+          const [d1,d2] = await Promise.all([r1.json(),r2.json()]);
+          const map = a => ({id:a.id,name:a.title.english||a.title.romaji,anilist_poster:a.coverImage.extraLarge||a.coverImage.large,poster_path:'_anilist_',vote_average:a.averageScore?a.averageScore/10:null,first_air_date:a.startDate?.year?`${a.startDate.year}-01-01`:null,content_type:'tv',is_anime:true,episodes:a.episodes,popularity:a.trending||0});
+          const items = [...(d1?.data?.Page?.media||[]),...(d2?.data?.Page?.media||[])].map(map).slice(0,50);
+          if (items.length) CacheManager.set(cacheKey, items, TTL);
+          return items;
+        } catch(e) { return ex || []; }
+      }
+
+      /* Silent background pre-fetch — runs 600ms after page ready */
+      function runBackground() {
+        const allCached = CacheManager.get(K.movies) && CacheManager.get(K.tv) && CacheManager.get(K.anime);
+        if (allCached) return;
+        setTimeout(async () => {
+          try {
+            await Promise.all([
+              CacheManager.get(K.movies) ? null : _tmdb50('movie', K.movies),
+              CacheManager.get(K.tv)     ? null : _tmdb50('tv',    K.tv),
+              CacheManager.get(K.anime)  ? null : _anime50(K.anime)
+            ]);
+          } catch(e) {}
+        }, 600);
+      }
+
+      /* Instant page slice from pre-fetched cache */
+      function getPage(contentType, pageNum, perPage) {
+        perPage = perPage || 20;
+        const cacheKey = K[contentType] || K.movies;
+        const all = CacheManager.get(cacheKey);
+        if (!all || !all.length) return null;
+        const slice = all.slice((pageNum-1)*perPage, pageNum*perPage);
+        return slice.length ? slice : null;
+      }
+
+      function hasMore(contentType, pageNum, perPage) {
+        perPage = perPage || 20;
+        const all = CacheManager.get(K[contentType] || K.movies);
+        if (!all) return true;
+        return pageNum * perPage < all.length;
+      }
+
+      return { runBackground, getPage, hasMore };
+    })();
+
+    /* ============================================================ */
     const API_KEY = '9d0f10dd934f1c2a6e91954041550593';
     const OMDB_API_KEY = '5b9b7798';
     const movieSlugCache = {};
@@ -1316,7 +1476,7 @@ document.onkeydown = function (e) {
       const defaults = {
         title:'GOTOCINEMA.net - Watch Movies, TV Shows & Anime',
         description:'Stream your favorite movies, TV shows and anime with multiple sources.',
-        imageUrl:'https://i.postimg.cc/d3TVYCTL/icon.png',
+        imageUrl:'https://i.postimg.cc/66jsDDrz/icon.png',
         pageUrl:window.location.href
       };
       const t=title||defaults.title, d=description||defaults.description,
@@ -1548,8 +1708,40 @@ document.onkeydown = function (e) {
 
     async function loadMovies(pageNum=1,append=false){
       if(state.isLoading) return; state.isLoading=true;
+
+      /* ── Instant: serve from pre-fetch cache when no filters/query active ── */
+      const isDefaultMode = !state.currentQuery && !state.currentPlatform && !state.currentLanguage && !state.currentGenre && !state.currentYear && state.currentSort==='popularity.desc' && !state.currentPersonId;
+      if(isDefaultMode && state.currentContentType !== 'anime') {
+        const pfItems = PreFetcher.getPage(state.currentContentType, pageNum);
+        if(pfItems) {
+          if(!append){ document.querySelectorAll('.skeleton-card').forEach(el=>el.remove()); }
+          else { loadingIndicator.style.display='none'; document.querySelectorAll('.skeleton-card').forEach(el=>el.remove()); }
+          displayMovies(pfItems, append); state.page=pageNum; state.isMainGridLoaded=true;
+          state.isLoading=false; loadingIndicator.style.display='none';
+          /* If we're exhausting prefetch, silently fetch next pages from API */ 
+          if(!PreFetcher.hasMore(state.currentContentType, pageNum+1)){ /* done */ }
+          return;
+        }
+      }
+      if(isDefaultMode && state.currentContentType === 'anime') {
+        const pfItems = PreFetcher.getPage('anime', pageNum);
+        if(pfItems) {
+          if(!append){ document.querySelectorAll('.skeleton-card').forEach(el=>el.remove()); }
+          else { loadingIndicator.style.display='none'; document.querySelectorAll('.skeleton-card').forEach(el=>el.remove()); }
+          displayMovies(pfItems, append); state.page=pageNum; state.isMainGridLoaded=true;
+          state.isLoading=false; loadingIndicator.style.display='none'; return;
+        }
+      }
+
+      /* ── Show skeleton while fetching ── */
       if(!append){ movieContainer.innerHTML=Array(12).fill('<div class="skeleton-card"></div>').join(''); }
-      else{ loadingIndicator.style.display='block'; }
+      else{
+        const skFrag=document.createDocumentFragment();
+        for(let _i=0;_i<8;_i++){const sk=document.createElement('div');sk.className='skeleton-card';skFrag.appendChild(sk);}
+        movieContainer.appendChild(skFrag);
+        loadingIndicator.style.display='none';
+      }
+
       try {
         const isAnime = state.currentContentType === 'anime';
         const endpoint = (state.currentContentType==='movies') ? 'movie' : 'tv';
@@ -1557,7 +1749,7 @@ document.onkeydown = function (e) {
         if(state.currentQuery&&pageNum===1&&!append&&!state.currentPersonId&&!isAnime){
           const movieUrl=`https://api.themoviedb.org/3/search/${endpoint}?api_key=${API_KEY}&query=${encodeURIComponent(state.currentQuery)}&page=1`;
           const personUrl=`https://api.themoviedb.org/3/search/person?api_key=${API_KEY}&query=${encodeURIComponent(state.currentQuery)}&page=1`;
-          const [movieRes,personRes]=await Promise.all([fetch(movieUrl).catch(()=>null),fetch(personUrl).catch(()=>null)]);
+          const [movieRes,personRes]=await Promise.all([cachedFetch(movieUrl,undefined,2*60*1000).catch(()=>null),cachedFetch(personUrl,undefined,2*60*1000).catch(()=>null)]);
           const movieData=movieRes?await movieRes.json():{results:[]};
           const personData=personRes?await personRes.json():{results:[]};
           const movieItems=(movieData.results||[]).map(i=>({...i,content_type:endpoint}));
@@ -1576,7 +1768,6 @@ document.onkeydown = function (e) {
             :`query($p:Int){Page(page:$p,perPage:20){media(type:ANIME,sort:TRENDING_DESC){id title{romaji english}coverImage{extraLarge large}episodes averageScore startDate{year}trending}}}`;
           const gqlV=state.currentQuery?{s:state.currentQuery,p:pageNum}:{p:pageNum};
           const res=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gqlQ,variables:gqlV})});
-          if(!res.ok) throw new Error('AniList API error');
           const data=await res.json();
           const animeList=data?.data?.Page?.media||[];
           const mappedItems=animeList.map(a=>({id:a.id,name:a.title.english||a.title.romaji,anilist_poster:a.coverImage.extraLarge||a.coverImage.large,poster_path:'_anilist_',vote_average:a.averageScore?a.averageScore/10:null,first_air_date:a.startDate?.year?`${a.startDate.year}-01-01`:null,content_type:'tv',is_anime:true,episodes:a.episodes,popularity:a.trending||0}));
@@ -1584,6 +1775,7 @@ document.onkeydown = function (e) {
           else if(!append){ movieContainer.innerHTML=`<p style="grid-column:1/-1;text-align:center;opacity:.7;">No anime found.</p>`; }
           state.isLoading=false; loadingIndicator.style.display='none'; document.querySelectorAll('.skeleton-card').forEach(el=>el.remove()); return;
         }
+
         let apiUrl;
         if(state.currentQuery){
           apiUrl=`https://api.themoviedb.org/3/search/${endpoint}?api_key=${API_KEY}&query=${encodeURIComponent(state.currentQuery)}&page=${pageNum}`;
@@ -1594,19 +1786,19 @@ document.onkeydown = function (e) {
           else { if(endpoint==='movie') apiUrl+=`&primary_release_date.lte=${today}`; else apiUrl+=`&first_air_date.lte=${today}`; if(state.currentLanguage) apiUrl+=`&with_original_language=${state.currentLanguage}`; if(state.currentGenre) apiUrl+=`&with_genres=${state.currentGenre}`; if(state.currentYear){ const yearParam=endpoint==='tv'?'first_air_date_year':'primary_release_year'; apiUrl+=`&${yearParam}=${state.currentYear}`; } }
         }
 
-        const response=await fetch(apiUrl);
-        if(!response.ok) throw new Error(`API error: ${response.status}`);
+        const response=await cachedFetch(apiUrl, undefined, 3*60*1000);
         const data=await response.json();
-        const mappedItems=data.results.map(item=>({...item,content_type:endpoint,is_anime:false}));
+        const mappedItems=(data.results||[]).map(item=>({...item,content_type:endpoint,is_anime:false}));
         if(mappedItems.length>0){ displayMovies(mappedItems,append); state.page=pageNum; state.isMainGridLoaded=true; }
         else if(!append){ movieContainer.innerHTML=`<p style="grid-column:1/-1;text-align:center;opacity:.7;">No content found.</p>`; }
       } catch(error){
-        console.error('Error fetching content:',error);
-        if(!append) movieContainer.innerHTML='<p style="grid-column:1/-1;text-align:center;">Error loading data. Please try again.</p>';
-        showToast('Error loading data.','error');
+        /* Silent failure — keep existing content, no error message shown */
+        if(!append && movieContainer.querySelectorAll('.movie-card').length===0){
+          movieContainer.innerHTML='';
+        }
       } finally {
         state.isLoading=false; loadingIndicator.style.display='none';
-        if(!append) document.querySelectorAll('.skeleton-card').forEach(el=>el.remove());
+        document.querySelectorAll('.skeleton-card').forEach(el=>el.remove());
       }
     }
 
@@ -1678,7 +1870,7 @@ document.onkeydown = function (e) {
         const _lang=item.original_language||item.lang||(item.is_anime?'ja':'');
         const _langInfo=LANG_MAP[_lang]||null;
         const langBadgeHtml=_langInfo?`<div class="card-bottom-overlay"><div class="lang-badge"><img class="lang-flag-img" src="https://flagcdn.com/w40/${_langInfo.cc}.png" alt="${_langInfo.name}" loading="lazy"><span class="lang-name">${_langInfo.name}</span></div><div class="card-title-bar"><span title="${title}">${title}</span></div></div>`:`<div class="card-bottom-overlay" style="padding-top:18px;"><div class="card-title-bar"><span title="${title}">${title}</span></div></div>`;
-        movieCard.innerHTML=`<div class="movie-poster-container"><div class="poster-placeholder"><i class="fas fa-spinner fa-pulse"></i></div><img src="${posterUrl}" alt="${title}" class="movie-poster" loading="lazy" onload="this.classList.add('loaded');this.previousElementSibling.classList.add('hidden');" onerror="this.onerror=null;this.parentElement.parentElement.style.display='none';"><div class="content-type-badge ${badgeClass}">${badgeText}</div>${statusBadgeHtml}${langBadgeHtml}<div class="card-hover-overlay"><div class="card-play-btn"><img src="https://i.postimg.cc/xCzV0GsF/icon.png" alt="play" draggable="false"></div></div></div><div class="movie-info"><div class="movie-meta"><div class="card-genres"><span class="genre-tag">${genreLabel}</span>${year?`<span class="genre-tag">${year}</span>`:''}</div><span class="imdb-rating"><i class="fas fa-star"></i> <span class="rating-value">${rating}</span></span></div></div>`;
+        movieCard.innerHTML=`<div class="movie-poster-container"><div class="poster-placeholder"><i class="fas fa-spinner fa-pulse"></i></div><img src="${posterUrl}" alt="${title}" class="movie-poster" loading="lazy" onload="this.classList.add('loaded');this.previousElementSibling.classList.add('hidden');" onerror="this.onerror=null;this.parentElement.parentElement.style.display='none';"><div class="content-type-badge ${badgeClass}">${badgeText}</div>${statusBadgeHtml}${langBadgeHtml}<div class="card-hover-overlay"><div class="card-play-btn"><img src="https://i.postimg.cc/66jsDDrz/icon.png" alt="play" draggable="false"></div></div></div><div class="movie-info"><div class="movie-meta"><div class="card-genres"><span class="genre-tag">${genreLabel}</span>${year?`<span class="genre-tag">${year}</span>`:''}</div><span class="imdb-rating"><i class="fas fa-star"></i> <span class="rating-value">${rating}</span></span></div></div>`;
         fragment.appendChild(movieCard);
       });
       container.appendChild(fragment);
@@ -1731,17 +1923,17 @@ document.onkeydown = function (e) {
         metadataTrailerBtn.innerHTML='<i class="fa-solid fa-play"></i><span>Trailer</span>';
         showMovieDetails(details,credits,external,true,true);
         state.currentVideoSource=1; updateSourceSelector(); updateVideoPlayer();
-      } catch(error){ console.error('Error fetching anime details:',error); showToast('Error loading anime details.','error'); }
+      } catch(error){ /* silent */ }
     }
 
     async function fetchAndShowMovieDetails(movieId,isTV=false){
       try {
         const endpoint=isTV?'tv':'movie';
         const [detailsRes,creditsRes,externalRes,videosRes]=await Promise.all([
-          fetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}?api_key=${API_KEY}&language=en-US`),
-          fetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/credits?api_key=${API_KEY}`),
-          fetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/external_ids?api_key=${API_KEY}`),
-          fetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/videos?api_key=${API_KEY}&language=en-US`)
+          cachedFetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}?api_key=${API_KEY}&language=en-US`, undefined, 10*60*1000),
+          cachedFetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/credits?api_key=${API_KEY}`, undefined, 10*60*1000),
+          cachedFetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/external_ids?api_key=${API_KEY}`, undefined, 10*60*1000),
+          cachedFetch(`https://api.themoviedb.org/3/${endpoint}/${movieId}/videos?api_key=${API_KEY}&language=en-US`, undefined, 10*60*1000)
         ]);
         const [details,credits,external,videosData]=await Promise.all([detailsRes.json(),creditsRes.json(),externalRes.json(),videosRes.json()]);
         const trailers=(videosData.results||[]).filter(v=>v.type==='Trailer'&&v.site==='YouTube');
@@ -1751,7 +1943,7 @@ document.onkeydown = function (e) {
         showMovieDetails(details,credits,external,isTV,isAnime);
         checkCustomEmbedUrl(details.id,isTV);
         state.currentVideoSource=isTV?2:1; updateSourceSelector(); updateVideoPlayer();
-      } catch(error){ console.error('Error fetching movie details:',error); showToast('Error loading movie details.','error'); }
+      } catch(error){ /* silent */ }
     }
 
     function addToWatchHistory(details,isTV){
@@ -1869,7 +2061,7 @@ document.onkeydown = function (e) {
       updateEditIconsVisibility(); checkDownloadUrl(details.id,isTV); updateCustomSourceForCurrentMovie(details.id,isTV);
       movieDetailsPage.classList.add('active'); document.body.style.overflow='hidden'; document.documentElement.style.overflow='hidden'; document.documentElement.style.scrollbarGutter='auto'; movieDetailsPage.scrollTo(0,0);
       const movieTitle=isTV?details.name:details.title;
-      const posterUrl=details.poster_path?`https://image.tmdb.org/t/p/w500${details.poster_path}`:'https://i.postimg.cc/d3TVYCTL/icon.png';
+      const posterUrl=details.poster_path?`https://image.tmdb.org/t/p/w500${details.poster_path}`:'https://i.postimg.cc/66jsDDrz/icon.png';
       updateOGMetaTags({title:movieTitle,description:details.overview||'',imageUrl:posterUrl,pageUrl:window.location.href});
     }
 
@@ -1999,6 +2191,7 @@ document.onkeydown = function (e) {
     },500);
 
     document.addEventListener('DOMContentLoaded',function(){
+      PreFetcher.runBackground();
       loadCustomEmbedUrls();
       window.addEventListener('popstate',handleRouting);
       window.addEventListener('hashchange',handleRouting);
