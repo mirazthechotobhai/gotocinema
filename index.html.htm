@@ -2,20 +2,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="module">
+import { createHotContext } from "/@vite/client";
+const hot = createHotContext("/__dummy__runtime-error-plugin");
 
-  <script type='text/javascript'>
-// Disable Right Click
-document.addEventListener('contextmenu', event => event.preventDefault());
-
-// Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-document.onkeydown = function (e) {
-  if (event.keyCode == 123 || 
-      (e.ctrlKey && e.shiftKey && e.keyCode == 73) || 
-      (e.ctrlKey && e.shiftKey && e.keyCode == 74) || 
-      (e.ctrlKey && e.keyCode == 85)) {
-    return false;
+function sendError(error) {
+  if (!(error instanceof Error)) {
+    error = new Error("(unknown runtime error)");
   }
+  const serialized = {
+    message: error.message,
+    stack: error.stack,
+  };
+  hot.send("runtime-error-plugin:error", serialized);
 }
+
+// Only notify the parent frame after the server confirms the error passed
+// the filter and the overlay will be shown.
+hot.on("runtime-error-plugin:notify-parent", () => {
+  try {
+    window.parent.postMessage({ type: "runtime-error", id: null }, "*");
+  } catch (_) {}
+});
+
+window.addEventListener("error", (evt) => {
+  sendError(evt.error);
+});
+
+window.addEventListener("unhandledrejection", (evt) => {
+  sendError(evt.reason);
+});
 </script>
 
   <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
@@ -25,10 +41,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
 
   <script type="module" src="/@vite/client"></script>
 
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pocket Movie - Watch Movies, TV Shows &amp; Anime</title>
+<title>Go To Cinema - Watch Movies, TV Shows &amp; Anime</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -53,7 +68,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .logo-text{font-size:24px;font-weight:800;color:#fff;cursor:pointer;user-select:none;display:flex;align-items:center;height:85px}
 .logo-inner{display:inline-flex;align-items:baseline;gap:0;line-height:1}
 .logo-img{height:.78em;width:auto;border-radius:2px;position:relative;top:.06em}
-.logo-tld{font-size:10px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.2px;margin-left:1px}
+.logo-tld{font-size:10px;font-weight:600;letter-spacing:.2px;margin-left:1px;animation:nav-color-cycle 4s linear infinite}
 .menu-nav{display:flex;align-items:center;height:85px;gap:6px}
 .menu-nav li{list-style:none}
 .menu-nav li a{display:flex;align-items:center;justify-content:center;padding:.45em 1.3em;color:rgba(255,255,255,.65);background:#262626;cursor:pointer;border-radius:8px;text-transform:uppercase;font-weight:700;letter-spacing:.5px;font-size:11px;white-space:nowrap;text-decoration:none;transition:color .2s;border:none;box-shadow:0 4px 10px rgba(0,0,0,.5)}
@@ -122,6 +137,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .card-rating{color:#f5c518;font-weight:700}
 .skeleton{background:linear-gradient(90deg,#1e1e1e 25%,#2a2a2a 50%,#1e1e1e 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-card{background:#181818;border-radius:6px;overflow:hidden}
 .skel-thumb{width:100%;aspect-ratio:2/3}.skel-body{padding:8px;display:flex;flex-direction:column;gap:7px}
 .skel-line{height:10px;border-radius:3px;width:90%}.skel-line.short{width:55%;height:9px}
 /* SCROLL TOP */
@@ -217,8 +233,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .dv-title{font-size:22px;font-weight:800;margin-bottom:6px;line-height:1.2;color:#f1f5f9}
 .dv-meta-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:12px;font-size:13px}
 .dv-genre{color:#f99;font-weight:600}.dv-meta{color:#94a3b8}.dv-dot{color:#475569;font-size:10px}.dv-imdb{color:#fbbf24;font-weight:700}
-.dv-action-row{display:flex;gap:6px;margin-top:8px}
-.dv-action-row{flex-wrap:nowrap;align-items:center}
+.dv-action-row{display:flex;gap:6px;margin-top:8px;flex-wrap:nowrap;align-items:center}
 .dv-btn{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 11px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:inherit;white-space:nowrap;transition:all .2s;letter-spacing:.2px;flex-shrink:0}
 .dv-btn:hover{opacity:.85;transform:translateY(-1px)}
 .btn-trailer{background:linear-gradient(135deg,#f44,#c00);color:#fff;box-shadow:0 3px 10px rgba(220,38,38,.4)}
@@ -258,23 +273,14 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .people-card-known{font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .person-works-header{display:flex;align-items:center;justify-content:space-between;padding:4px 20px 12px}
 .person-works-count{font-size:12px;color:#64748b;font-weight:500}
-
 .person-works{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:14px 20px 40px}
 /* RESPONSIVE */
 @media(max-width:900px){.posts-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:600px){.posts-grid{grid-template-columns:repeat(3,1fr)}.break-text{display:none}.header-wrapper{display:flex;flex-direction:column;align-items:center;height:auto;padding:14px 16px;gap:10px}.logo-text{height:auto;width:100%;justify-content:center}.menu-nav{height:auto;justify-content:center;flex-wrap:wrap;gap:5px}.menu-nav li a{padding:.4em 1em;font-size:10px}#header-search{width:100%;justify-content:center}.search-box{width:100%}.search-input{width:100%;max-width:100%;padding:0 80px 0 14px}.search-input:focus{width:100%}}
 @media(max-width:400px){.posts-grid{grid-template-columns:repeat(2,1fr)}}
-
-@media(max-width:520px){
-  .dv-action-row{gap:4px;flex-wrap:nowrap}
-  .dv-btn{padding:5px 9px;font-size:10px;gap:3px;letter-spacing:0}
-  .btn-share{width:28px;height:28px}
-  .dv-btn svg{flex-shrink:0}
-}
-
+@media(max-width:520px){.dv-action-row{gap:4px;flex-wrap:nowrap}.dv-btn{padding:5px 9px;font-size:10px;gap:3px;letter-spacing:0}.btn-share{width:28px;height:28px}.dv-btn svg{flex-shrink:0}}
 .cast-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#1e293b}
 .cast-no-img svg{opacity:.5}
-
 /* DETAIL TRANSITION OVERLAY */
 #detail-transition{position:fixed;inset:0;z-index:9998;background:rgba(10,10,15,.85);opacity:0;pointer-events:none;backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);transition:opacity .5s ease,backdrop-filter .6s ease,-webkit-backdrop-filter .6s ease}
 #detail-transition.active{opacity:1;backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);pointer-events:all}
@@ -418,7 +424,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <!-- TOPBAR -->
 <div class="topbar-wrapper">
   <div class="top-inner">
-    <div class="breakhead">⚡ <span class="break-text">TRENDING</span></div>
+    <div class="breakhead">&#x26A1; <span class="break-text">TRENDING</span></div>
     <div class="ticker-wrap"><div class="ticker-item" id="ticker-item"><span class="ticker-rank" id="ticker-rank">#1</span><span class="ticker-title" id="ticker-title">Loading...</span></div></div>
     <div class="social-icons">
       <a href="#" title="Facebook"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
@@ -433,7 +439,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <div id="main-header">
   <div class="header-wrapper">
     <span class="logo-text" onclick="window.scrollTo({top:0,behavior:'smooth'});document.getElementById('search-input').value='';loadTab('movie')">
-      <span class="logo-inner">P<img class="logo-img" src="https://i.postimg.cc/SshGJbvh/apple-touch-icon.png" alt="o">CKET MOVIE<span class="logo-tld">.net</span></span>
+      <span class="logo-inner">G<img class="logo-img" src="https://i.postimg.cc/SshGJbvh/apple-touch-icon.png" alt="o">&nbsp;TO CINEMA<span class="logo-tld">.net</span></span>
     </span>
     <nav><ul class="menu-nav" id="menu-nav">
       <li><a id="tab-movie" class="active" onclick="window.scrollTo({top:0,behavior:'smooth'});loadTab('movie')">Movies</a></li>
@@ -475,7 +481,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <!-- FEATURED -->
 <div id="featured-wrapper">
   <div class="featured-post">
-    <h2>Featured</h2>
+    <h2>Top Of The Week</h2>
     <div class="heading-underline"></div>
     <div class="featured-scroller" id="feat-scroller">
       <div id="feat-track"></div>
@@ -493,28 +499,26 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <div id="outer-wrapper">
   <h2 class="section-heading" id="section-title">Movies</h2>
   <div class="posts-grid" id="posts-grid"></div>
-  <div id="load-more-spinner" style="text-align:center;padding:20px;color:#aaa;display:none">⏳ Loading more...</div>
+  <div id="load-more-spinner" style="text-align:center;padding:20px;color:#aaa;display:none">&#x23F3; Loading more...</div>
   <div id="load-trigger" style="height:10px"></div>
 </div>
 
 <!-- SCROLL TOP -->
-<button class="scroll-top-btn" id="scroll-top-btn">↑</button>
-
-<!-- DETAIL TRANSITION OVERLAY -->
+<button class="scroll-top-btn" id="scroll-top-btn">&#x2191;</button>
 
 <!-- DETAIL TRANSITION OVERLAY -->
 <div id="detail-transition"><div class="dt-inner"><div class="dt-spinner"></div></div></div>
 
 <!-- ADMIN LOGIN BTN -->
 <button class="admin-login-btn" id="admin-login-btn" title="Login / Sign Up">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="admin-btn-icon"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 </button>
 
 <!-- AUTH OVERLAY -->
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
-    <button class="auth-close-btn" id="auth-close-btn">✕</button>
-    <div class="auth-title">🎬 Pocket Movie</div>
+    <button class="auth-close-btn" id="auth-close-btn">&#x2715;</button>
+    <div class="auth-title">&#x1F3AC; Go To Cinema</div>
     <div class="auth-sub">Your account</div>
     <div id="auth-form-wrap">
       <div class="auth-tabs">
@@ -542,13 +546,13 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <!-- ADMIN URL EDIT POPUP -->
 <div class="aurl-overlay" id="aurl-overlay">
   <div class="aurl-box">
-    <button class="aurl-close" id="aurl-close">✕</button>
+    <button class="aurl-close" id="aurl-close">&#x2715;</button>
     <div class="aurl-title" id="aurl-title">Edit URL</div>
     <div class="aurl-hint" id="aurl-hint"></div>
     <input type="text" class="aurl-input" id="aurl-input" placeholder="https://...">
     <div class="aurl-actions">
-      <button class="aurl-save" id="aurl-save">✓ Save</button>
-      <button class="aurl-clear" id="aurl-clear">🗑 Clear</button>
+      <button class="aurl-save" id="aurl-save">&#x2713; Save</button>
+      <button class="aurl-clear" id="aurl-clear">&#x1F5D1; Clear</button>
     </div>
   </div>
 </div>
@@ -557,7 +561,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <div id="detail-view">
   <div class="dv-top-bar">
     <span class="dv-top-title" id="dv-top-title"></span>
-    <button class="dv-close-btn" id="dv-close-btn">✕</button>
+    <button class="dv-close-btn" id="dv-close-btn">&#x2715;</button>
   </div>
   <div id="dv-player-section">
     <div id="dv-player-placeholder">
@@ -573,29 +577,29 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
     <div id="dv-player-wrap"><iframe id="dv-iframe" allowfullscreen allow="autoplay; fullscreen" title="Player" src=""></iframe></div>
   </div>
   <div class="ep-nav-bar" id="ep-nav-bar">
-    <button class="ep-nav-btn" id="ep-prev-btn">◀ Prev Ep</button>
+    <button class="ep-nav-btn" id="ep-prev-btn">&#x25C4; Prev Ep</button>
     <span class="ep-nav-now" id="ep-nav-now"></span>
-    <button class="ep-nav-btn" id="ep-next-btn">Next Ep ▶</button>
+    <button class="ep-nav-btn" id="ep-next-btn">Next Ep &#x25BA;</button>
   </div>
   <div class="player-sources" id="player-sources"></div>
   <div class="tv-se-bar" id="tv-se-bar">
     <div class="se-inner">
       <div class="se-lbl se-season-part">S</div>
-      <div class="se-total se-season-part" id="se-total-s">—</div>
+      <div class="se-total se-season-part" id="se-total-s">&#x2014;</div>
       <input type="text" inputmode="numeric" class="se-num se-season-part" id="tv-season-input" value="1">
       <div class="se-arrows se-season-part">
-        <button class="se-arrow" id="s-up">▲</button>
-        <button class="se-arrow" id="s-down">▼</button>
+        <button class="se-arrow" id="s-up">&#x25B2;</button>
+        <button class="se-arrow" id="s-down">&#x25BC;</button>
       </div>
       <div class="se-divider se-season-part"></div>
       <div class="se-lbl">E</div>
-      <div class="se-total" id="se-total-e">—</div>
+      <div class="se-total" id="se-total-e">&#x2014;</div>
       <input type="text" inputmode="numeric" class="se-num" id="tv-ep-input" value="1">
       <div class="se-arrows">
-        <button class="se-arrow" id="e-up">▲</button>
-        <button class="se-arrow" id="e-down">▼</button>
+        <button class="se-arrow" id="e-up">&#x25B2;</button>
+        <button class="se-arrow" id="e-down">&#x25BC;</button>
       </div>
-      <button class="se-play-btn" id="se-play-btn">▶ Play</button>
+      <button class="se-play-btn" id="se-play-btn">&#x25BA; Play</button>
     </div>
   </div>
   <div id="dv-info-section">
@@ -617,7 +621,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 
 <!-- PERSON VIEW -->
 <div id="person-view">
-  <button class="person-close-btn" id="person-close-btn">✕</button>
+  <button class="person-close-btn" id="person-close-btn">&#x2715;</button>
   <div id="person-hero-wrap"></div>
   <p class="person-bio" id="person-bio"></p>
   <div class="person-works-header"><h3 id="person-works-title" style="font-size:15px;font-weight:700;color:#f1f5f9;margin:0">Known For</h3><span class="person-works-count" id="person-works-count"></span></div>
@@ -708,9 +712,19 @@ const cache = {};
 const $ = id => document.getElementById(id);
 function getTitle(i){return i&&(i.title||i.name)||'Unknown'}
 function getYear(i){const d=i&&(i.release_date||i.first_air_date)||'';return d?d.slice(0,4):''}
-function typeBg(t){return t==='tv'?'#1d4ed8':t==='anime'?'#7c3aed':'#b91c1c'}
-function typeLabel(t){return t==='tv'?'TV':t==='anime'?'ANIME':'MOVIE'}
-function imgUrl(p,s='w342'){return p?`${IMG}/${s}${p}`:PH}
+function typeBg(t){
+  const ct=typeof t==='object'?t.contentType:t;
+  if(ct==='tv')return '#1d4ed8';
+  if(ct==='anime')return '#7c3aed';
+  return '#b91c1c';
+}
+function typeLabel(t){
+  const ct=typeof t==='object'?t.contentType:t;
+  if(ct==='tv')return 'TV';
+  if(ct==='anime')return 'ANIME';
+  return 'MOVIE';
+}
+function imgUrl(p,s='w342'){if(!p)return PH;if(p.startsWith('http'))return p;return `${IMG}/${s}${p}`;}
 function showLoading(v){$('loading-overlay').classList.toggle('show',v)}
 
 function normalizeEmbed(raw){
@@ -731,6 +745,26 @@ async function tmdb(ep,params={}){
   u.searchParams.set('api_key',TMDB_KEY);
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v)));
   const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json();
+}
+
+// ── ANILIST API ───────────────────────────────────────────────────────────────
+const ANILIST_Q=`query($page:Int,$perPage:Int,$sort:[MediaSort]){Page(page:$page,perPage:$perPage){pageInfo{hasNextPage}media(type:ANIME,sort:$sort,isAdult:false){id idMal title{romaji english}coverImage{large}averageScore startDate{year month day}format description(asHtml:false)episodes}}}`;
+async function fetchAniList(variables){
+  const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query:ANILIST_Q,variables})});
+  if(!r.ok)throw new Error(r.status);
+  const d=await r.json();return d.data?.Page?.media||[];
+}
+function anilistToItem(m){
+  const isMovie=m.format==='MOVIE';
+  const title=m.title?.english||m.title?.romaji||'Unknown';
+  const sd=m.startDate||{};
+  const date=sd.year?`${sd.year}-${String(sd.month||1).padStart(2,'0')}-${String(sd.day||1).padStart(2,'0')}`:'';
+  if(isMovie){
+    // Anime MOVIE → treat exactly like a regular movie
+    return {id:m.id,idMal:m.idMal||null,title,release_date:date,vote_average:m.averageScore?+(m.averageScore/10).toFixed(1):0,poster_path:m.coverImage?.large||null,overview:(m.description||'').replace(/<[^>]+>/g,'').replace(/&[a-z]+;/gi,''),contentType:'movie'};
+  }
+  // Anime TV/ONA/OVA etc. → anime contentType (single dedicated player)
+  return {id:m.id,idMal:m.idMal||null,name:title,first_air_date:date,vote_average:m.averageScore?+(m.averageScore/10).toFixed(1):0,poster_path:m.coverImage?.large||null,overview:(m.description||'').replace(/<[^>]+>/g,'').replace(/&[a-z]+;/gi,''),contentType:'anime'};
 }
 
 // ── FIREBASE AUTH ─────────────────────────────────────────────────────────────
@@ -784,14 +818,14 @@ function showUserPanel(){
   $('auth-form-wrap').style.display='none';$('auth-user-panel').style.display='';
   const init=(currentUser.displayName||currentUser.email||'U').charAt(0).toUpperCase();
   const av=$('auth-avatar');av.textContent=init;av.style.background=isAdmin?'#16a34a':'#e11d48';
-  $('auth-user-role').textContent=isAdmin?'✓ Admin':'● Member';
+  $('auth-user-role').textContent=isAdmin?'&#x2713; Admin':'&#x25CF; Member';
   $('auth-user-role').style.color=isAdmin?'#22c55e':'#60a5fa';
   $('auth-user-name').textContent=currentUser.displayName||(currentUser.email||'').split('@')[0];
   $('auth-user-email').textContent=currentUser.email||'';
 }
 function setAuthMsg(msg,type){const el=$('auth-msg');el.textContent=msg;el.className='auth-msg'+(type?' '+type:'')}
 async function handleAuthSubmit(){
-  setAuthMsg('Please wait…','');
+  setAuthMsg('Please wait\u2026','');
   $('auth-submit-btn').disabled=true;
   const email=$('auth-email-input').value,pass=$('auth-pass-input').value,name=$('auth-name-input').value;
   if(!email){setAuthMsg('Enter your email.','err');$('auth-submit-btn').disabled=false;return}
@@ -801,17 +835,17 @@ async function handleAuthSubmit(){
     if(authMode==='signup'){
       const c=await fbAuth.createUserWithEmailAndPassword(email,pass);
       if(name)await c.user.updateProfile({displayName:name});
-      setAuthMsg('✓ Account created! Welcome!','ok');
+      setAuthMsg('\u2713 Account created! Welcome!','ok');
     } else {
       await fbAuth.signInWithEmailAndPassword(email,pass);
-      setAuthMsg('✓ Signed in!','ok');
+      setAuthMsg('\u2713 Signed in!','ok');
     }
     setTimeout(()=>{$('auth-overlay').classList.remove('show');if(currentUser)showUserPanel()},700);
   }catch(e){setAuthMsg(MAP[e.code]||e.message,'err')}
   $('auth-submit-btn').disabled=false;
 }
 
-// ── FIRESTORE URLs (anon-auth for public reads, admin writes) ────────────────
+// ── FIRESTORE URLs ────────────────────────────────────────────────────────────
 async function loadUrls(ct,id){
   currentDlUrl='';currentPlUrl='';
   try{
@@ -867,8 +901,12 @@ async function fetchPage(type,page){
   let d;
   if(type==='movie'){d=await tmdb('/movie/popular',{page});return d.results.map(r=>({...r,contentType:'movie'}))}
   if(type==='tv'){d=await tmdb('/tv/popular',{page});return d.results.map(r=>({...r,contentType:'tv'}))}
-  d=await tmdb('/discover/tv',{page,with_genres:'16',with_origin_country:'JP',sort_by:'popularity.desc'});
-  return d.results.map(r=>({...r,contentType:'anime'}));
+  // AniList: page1=trending, page2=new releases, page3+=popular
+  const sortMap={1:['TRENDING_DESC'],2:['START_DATE_DESC'],3:['POPULARITY_DESC']};
+  const alSort=sortMap[page]||['POPULARITY_DESC'];
+  const alPage=page>3?page-2:1;
+  const results=await fetchAniList({page:alPage,perPage:30,sort:alSort});
+  return results.map(anilistToItem);
 }
 
 function getCached(t){return cache[t]||{items:[],lastPage:0}}
@@ -905,7 +943,7 @@ function loadFeatured(){
   [...featItems,...featItems].forEach((item,i)=>{
     const realIdx=i%featItems.length;
     const div=document.createElement('div');div.className='feat-card';
-    div.innerHTML=`<div class="thumb-wrap"><img src="${imgUrl(item.poster_path,'w300')}" alt="" loading="lazy" onerror="this.src='${PH}'"><span class="card-label" style="background:${typeBg(item.contentType)}">${typeLabel(item.contentType)}</span>${item.vote_average?`<span class="card-rating-badge">★ ${item.vote_average.toFixed(1)}</span>`:''}</div><div class="card-body"><div class="card-title">${getTitle(item)}</div><div class="card-meta">${getYear(item)}</div></div>`;
+    div.innerHTML=`<div class="thumb-wrap"><img src="${imgUrl(item.poster_path,'w300')}" alt="" loading="lazy" onerror="this.src='${PH}'"><span class="card-label" style="background:${typeBg(item)}">${typeLabel(item)}</span>${item.vote_average?`<span class="card-rating-badge">\u2605 ${item.vote_average.toFixed(1)}</span>`:''}</div><div class="card-body"><div class="card-title">${getTitle(item)}</div><div class="card-meta">${getYear(item)}</div></div>`;
     div.onclick=()=>{if(!carDragMoved)triggerDetailTransition(featItems[realIdx])};
     track.appendChild(div);
   });
@@ -951,7 +989,7 @@ function renderGrid(){
   visible.forEach(item=>{
     const div=document.createElement('div');div.className='post-card';
     const rating=item.vote_average?item.vote_average.toFixed(1):'';
-    div.innerHTML=`<div class="thumb-wrap"><img src="${imgUrl(item.poster_path)}" alt="" loading="lazy" onerror="this.src='${PH}'"><span class="card-label" style="background:${typeBg(item.contentType)}">${typeLabel(item.contentType)}</span>${rating?`<span class="card-rating-badge">★ ${rating}</span>`:''}</div><div class="card-body"><div class="card-title">${getTitle(item)}</div><div class="card-meta">${getYear(item)?`<span>${getYear(item)}</span>`:''}${rating?`<span class="card-rating">★ ${rating}</span>`:''}</div></div>`;
+    div.innerHTML=`<div class="thumb-wrap"><img src="${imgUrl(item.poster_path)}" alt="" loading="lazy" onerror="this.src='${PH}'"><span class="card-label" style="background:${typeBg(item)}">${typeLabel(item)}</span>${rating?`<span class="card-rating-badge">\u2605 ${rating}</span>`:''}</div><div class="card-body"><div class="card-title">${getTitle(item)}</div><div class="card-meta">${getYear(item)?`<span>${getYear(item)}</span>`:''}${rating?`<span class="card-rating">\u2605 ${rating}</span>`:''}</div></div>`;
     div.onclick=()=>triggerDetailTransition(item);
     grid.appendChild(div);
   });
@@ -982,36 +1020,35 @@ async function doSearch(){
       $('people-section-title').textContent='People';
       $('people-grid').innerHTML=people.map(function(p){
         const src=p.profile_path?IMG+'/w185'+p.profile_path:'';
-        const photoEl=src?('<img class="people-card-photo" src="'+src+'" alt="" loading="lazy" onerror="this.style.opacity=.15">') :'<div class="people-card-photo" style="background:#1e293b"></div>';
-        const dept=p.known_for_department||'';
-        const known=(p.known_for||[]).slice(0,2).map(k=>getTitle(k)).filter(Boolean).join(', ');
-        const sub=[dept,known].filter(Boolean).join(' · ');
-        return '<div class="people-card" onclick="openPerson('+p.id+')">'+photoEl+'<div class="people-card-info"><div class="people-card-name">'+p.name+'</div><div class="people-card-known">'+sub+'</div></div></div>';
+        return '<div class="people-card" onclick="openPerson('+p.id+')">'+(src?'<img class="people-card-photo" src="'+src+'" alt="" onerror="this.src=\''+AVPH+'\'">':`<div class="people-card-photo" style="display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>`)+'<div class="people-card-info"><div class="people-card-name">'+p.name+'</div><div class="people-card-known">'+(p.known_for_department||'')+'</div></div></div>';
       }).join('');
       $('people-section').style.display='block';
     }
-    discoverItems=d.results.filter(r=>r.media_type==='movie'||r.media_type==='tv').map(r=>({...r,contentType:r.media_type==='movie'?'movie':'tv'}));
+    const media=d.results.filter(r=>r.media_type==='movie'||r.media_type==='tv');
+    discoverItems=media.map(r=>({...r,contentType:r.media_type}));
     displayCount=discoverItems.length;renderGrid();
-  }catch{}
+  }catch(e){}
   showLoading(false);
 }
 $('search-btn').onclick=doSearch;
 $('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
 
-// ── ADV SEARCH ────────────────────────────────────────────────────────────────
+// ── ADV FILTER TOGGLE ────────────────────────────────────────────────────────
 $('adv-toggle-btn').onclick=()=>{
-  const bar=$('adv-bar');const isOpen=bar.classList.toggle('open');
-  $('adv-toggle-btn').classList.toggle('open',isOpen);
+  const open=$('adv-bar').classList.toggle('open');
+  $('adv-toggle-btn').classList.toggle('open',open);
 };
-$('adv-type').onchange=()=>{$('adv-type').value==='anime'||buildGenreSelect()};
-function buildGenreSelect(){
-  const type=$('adv-type').value;
-  const gs=type==='movie'?MOVIE_GENRES:TV_GENRES;
-  $('adv-genre').innerHTML='<option value="">Any Genre</option>'+gs.map(g=>`<option value="${g.v}">${g.l}</option>`).join('');
-}
-buildGenreSelect();
 
-// Lang dropdown
+// ── GENRE POPULATE ───────────────────────────────────────────────────────────
+function populateGenres(type){
+  const sel=$('adv-genre');sel.innerHTML='<option value="">Any Genre</option>';
+  const genres=type==='tv'||type==='anime'?TV_GENRES:MOVIE_GENRES;
+  genres.forEach(g=>sel.innerHTML+=`<option value="${g.v}">${g.l}</option>`);
+}
+$('adv-type').onchange=()=>populateGenres($('adv-type').value);
+populateGenres('movie');
+
+// ── LANG DROPDOWN ────────────────────────────────────────────────────────────
 const langSearch=$('lang-search'),langList=$('lang-list');
 function buildLangList(filter=''){
   const items=ALL_LANGUAGES.filter(l=>!filter||l.l.toLowerCase().includes(filter.toLowerCase()));
@@ -1072,9 +1109,7 @@ function triggerDetailTransition(item){
   const ov=$('detail-transition');
   ov.classList.remove('fade-out');
   ov.classList.add('active');
-  // Start loading data immediately in background
   setTimeout(()=>openDetail(item), 150);
-  // After 5s reveal the detail page
   setTimeout(()=>{
     ov.classList.add('fade-out');
     setTimeout(()=>{ov.classList.remove('active','fade-out');},700);
@@ -1082,12 +1117,12 @@ function triggerDetailTransition(item){
 }
 async function openDetail(item){
   if(!item||!item.id)return;
-  currentDetail=item;currentSeason=1;currentEp=1;activeServer=item.contentType==='tv'?1:0;
+  currentDetail=item;currentSeason=1;currentEp=1;activeServer=item.contentType==='tv'?2:0;
   tvSeasons=[];totalEps=0;trailerKey=null;trailerPlaying=false;currentDlUrl='';currentPlUrl='';
 
-  // ── Show immediately from item data ──
   $('detail-view').classList.add('open');
   document.body.style.overflow='hidden';document.documentElement.style.overflow='hidden';
+  setDetailHash(item);
   $('dv-player-wrap').style.display='none';$('dv-player-placeholder').style.display='flex';
   $('dv-iframe').src='';
   $('dv-top-title').textContent=getTitle(item);
@@ -1097,26 +1132,58 @@ async function openDetail(item){
   $('dv-backdrop').src='';
   const year=getYear(item);
   const rating=item.vote_average?item.vote_average.toFixed(1):'';
-  $('dv-meta-row').innerHTML=(year?`<span class="dv-meta">${year}</span>`:'')+(rating?`<span class="dv-dot">·</span><span class="dv-imdb">\u2605 ${rating}</span>`:'');
+  $('dv-meta-row').innerHTML=(year?`<span class="dv-meta">${year}</span>`:'')+(rating?`<span class="dv-dot">\xb7</span><span class="dv-imdb">\u2605 ${rating}</span>`:'');
   $('dv-plot').textContent=item.overview||'';
   $('dv-cast-section').style.display='none';$('cast-grid').innerHTML='';
-  if(item.contentType==='tv'||item.contentType==='anime'){
+  const isAnimeMovie=item.contentType==='anime'&&!!(item.title&&!item.name);
+  if((item.contentType==='tv'||item.contentType==='anime')&&!isAnimeMovie){
     const ss=$('tv-se-bar');ss.classList.add('show');
     $('tv-season-input').value=1;$('tv-ep-input').value=1;
-    $('se-total-s').textContent='…';$('se-total-e').textContent='…';
-    ss.querySelectorAll('.se-season-part').forEach(el=>el.style.display=item.contentType==='anime'?'none':'');
+    $('se-total-s').textContent='\u2026';$('se-total-e').textContent='\u2026';
+    ss.querySelectorAll('.se-season-part').forEach(el=>el.style.display='');
   }else{$('tv-se-bar').classList.remove('show');}
   buildPlayerSources();rebuildActionRow();
 
-  // ── Parallel: TMDB details + Firebase URLs ──
   const key=`${item.contentType}_${item.id}`;
   let dd=detailCache[key];
   await Promise.all([
     (async()=>{
       if(!dd){
         try{
-          const ep=(item.contentType==='tv'||item.contentType==='anime')?`/tv/${item.id}`:`/movie/${item.id}`;
-          dd=await tmdb(ep,{append_to_response:'external_ids,videos'});
+          if(item.contentType==='anime'){
+            // Reference: direct AniList fetch for anime detail (genres, episodes, trailer, cast)
+            const aniQ=`query($id:Int){Media(id:$id,type:ANIME){id title{romaji english}coverImage{extraLarge large}episodes averageScore description(asHtml:false)startDate{year}genres studios{nodes{name}}trailer{id site}characters(role:MAIN,sort:ID,page:1,perPage:12){edges{node{id name{full}image{large}}role}}}}`;
+            const aniRes=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:aniQ,variables:{id:parseInt(item.id)}})}).catch(()=>null);
+            const aniData=aniRes?await aniRes.json().catch(()=>({})):{};
+            const media=aniData?.data?.Media;
+            if(media){
+              const tKey=(media.trailer?.site==='youtube')?media.trailer.id:null;
+              const epCount=media.episodes||0;
+              dd={
+                genres:(media.genres||[]).map(g=>({name:g})),
+                seasons:epCount?[{season_number:1,episode_count:epCount}]:[],
+                overview:(media.description||'').replace(/<[^>]+>/g,'').replace(/&[a-z]+;/gi,''),
+                runtime:24,
+                videos:{results:tKey?[{key:tKey,site:'YouTube',type:'Trailer'}]:[]},
+                _anilistCast:(media.characters?.edges||[]).map(e=>({id:e.node.id,name:e.node.name?.full||'',character:'Main Character',_aniprofile:e.node.image?.large}))
+              };
+              item.name=media.title?.english||media.title?.romaji||item.name;
+              item.poster_path=media.coverImage?.extraLarge||media.coverImage?.large||item.poster_path;
+              item.overview=dd.overview;
+            }else{dd={};}
+          }else if(item.contentType==='movie'&&item.idMal!=null){
+            // Anime movie from AniList: search TMDB by title for full movie data
+            const qTitle=item.title||'';
+            const sr=await tmdb('/search/movie',{query:qTitle,page:1}).catch(()=>({results:[]}));
+            const match=sr.results&&sr.results[0];
+            if(match){
+              dd=await tmdb(`/movie/${match.id}`,{append_to_response:'external_ids,videos'}).catch(()=>({}));
+              item._tmdbId=match.id;
+            }else{dd={};}
+          }else{
+            const ep=(item.contentType==='tv'||item.contentType==='anime')?`/tv/${item.id}`:`/movie/${item.id}`;
+            dd=await tmdb(ep,{append_to_response:'external_ids,videos'});
+          }
           detailCache[key]=dd;
         }catch{dd={};}
       }
@@ -1131,8 +1198,8 @@ async function openDetail(item){
     })()
   ]);
 
-  // ── Render TMDB data ──
   if(dd.backdrop_path)$('dv-backdrop').src=`${IMG}/w1280${dd.backdrop_path}`;
+  else if(item.contentType==='anime'&&item.poster_path&&item.poster_path.startsWith('http'))$('dv-backdrop').src=item.poster_path;
   const genres=(dd.genres||[]).map(g=>g.name).join(', ');
   const runtime=dd.runtime?`${dd.runtime}m`:'';
   const seasons=dd.number_of_seasons;
@@ -1150,24 +1217,42 @@ async function openDetail(item){
   trailerKey=tr?tr.key:null;
   if(item.contentType==='tv'||item.contentType==='anime'){
     tvSeasons=(dd.seasons||[]).filter(s=>s.season_number>0);
-    $('se-total-s').textContent=tvSeasons.length||'—';
+    $('se-total-s').textContent=tvSeasons.length||'\u2014';
     await updateSeasonEps(1);
   }
   buildPlayerSources();rebuildActionRow();
   $('dv-plot').textContent=dd.overview||item.overview||'No overview available.';
 
-  // ── Cast (fire-and-forget) ──
-  const credEp=(item.contentType==='tv'||item.contentType==='anime')?`/tv/${item.id}/credits`:`/movie/${item.id}/credits`;
-  tmdb(credEp).then(c=>{
-    const cast=(c.cast||[]).slice(0,20);
-    if(!cast.length)return;
+  const pi='<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" width="46" height="46"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+  if(item.contentType==='anime'&&dd._anilistCast&&dd._anilistCast.length){
+    // Anime: use AniList characters as cast
     $('dv-cast-section').style.display='block';
-    $('cast-grid').innerHTML=cast.map(cm=>{const pi='<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" width="46" height="46"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';const imgHtml=cm.profile_path?'<img src="'+IMG+'/w185'+cm.profile_path+'" alt="" loading="lazy" class="cast-photo" onerror="castImgFail(this)"><div class="cast-no-img" style="display:none">'+pi+'</div>':'<div class="cast-no-img">'+pi+'</div>';return '<div class="cast-card" onclick="openPerson('+cm.id+')"><div class="cast-img-wrap">'+imgHtml+'</div><div class="cast-name">'+cm.name+'</div><div class="cast-role">'+(cm.character||'')+'</div></div>';}).join('');
-  }).catch(()=>{});
+    $('cast-grid').innerHTML=dd._anilistCast.map(cm=>{
+      const imgHtml=cm._aniprofile?'<img src="'+cm._aniprofile+'" alt="" loading="lazy" onerror="castImgFail(this)"><div class="cast-no-img" style="display:none">'+pi+'</div>':'<div class="cast-no-img">'+pi+'</div>';
+      return '<div class="cast-card"><div class="cast-img-wrap">'+imgHtml+'</div><div class="cast-name">'+cm.name+'</div><div class="cast-role">'+(cm.character||'')+'</div></div>';
+    }).join('');
+  }else if(item.contentType!=='anime'){
+    const credId=item._tmdbId||item.id;
+    const credEp=item.contentType==='tv'?`/tv/${credId}/credits`:`/movie/${credId}/credits`;
+    tmdb(credEp).then(c=>{
+      const cast=(c.cast||[]).slice(0,20);if(!cast.length)return;
+      $('dv-cast-section').style.display='block';
+      $('cast-grid').innerHTML=cast.map(cm=>{
+        const imgHtml=cm.profile_path?'<img src="'+IMG+'/w185'+cm.profile_path+'" alt="" loading="lazy" onerror="castImgFail(this)"><div class="cast-no-img" style="display:none">'+pi+'</div>':'<div class="cast-no-img">'+pi+'</div>';
+        return '<div class="cast-card" onclick="openPerson('+cm.id+')"><div class="cast-img-wrap">'+imgHtml+'</div><div class="cast-name">'+cm.name+'</div><div class="cast-role">'+(cm.character||'')+'</div></div>';
+      }).join('');
+    }).catch(()=>{});
+  }
 }
+
 function buildPlayerSources(){
   const ps=$('player-sources');ps.innerHTML='';
-  if(!currentDetail||currentDetail.contentType==='anime'){ps.style.display='none';return}
+  if(!currentDetail){ps.style.display='none';return}
+  if(currentDetail.contentType==='anime'){
+    // Single dedicated anime player — no server buttons needed
+    ps.style.display='none';
+    return;
+  }
   ps.style.display='flex';
   const servers=currentDetail.contentType==='tv'?TV_SERVERS:MOVIE_SERVERS;
   servers.forEach((_,i)=>{
@@ -1178,7 +1263,6 @@ function buildPlayerSources(){
     div.onclick=()=>{activeServer=srvIdx;buildPlayerSources();if($('dv-player-wrap').style.display!=='none')playServer()};
     ps.appendChild(div);
   });
-  // custom player btn
   const wrap=document.createElement('div');wrap.className='custom-src-wrap';
   const cdiv=document.createElement('div');
   cdiv.className=`source-icon custom-src${activeServer==='custom'?' active':''}`;
@@ -1227,7 +1311,7 @@ function rebuildActionRow(){
 async function updateSeasonEps(season){
   const s=tvSeasons.find(x=>x.season_number===season);
   totalEps=s?s.episode_count:0;
-  $('se-total-e').textContent=totalEps||'—';
+  $('se-total-e').textContent=totalEps||'\u2014';
 }
 
 function setPlayer(src){
@@ -1240,7 +1324,10 @@ function playServer(){
   if(!currentDetail)return;
   const id=currentDetail.id,ct=currentDetail.contentType;
   let url='';
-  if(ct==='anime')url=`https://cinemaos.live/animeplayer/watch/${id}/${currentEp}`;
+  if(ct==='anime'){
+    // Reference: cinemaos anime player with AniList ID directly
+    url=`https://cinemaos.live/animeplayer/watch/${id}/${currentEp}`;
+  }
   else if(ct==='tv'){const srv=TV_SERVERS[activeServer-1]||TV_SERVERS[0];url=srv.url(id,currentSeason,currentEp);}
   else{const srv=MOVIE_SERVERS[activeServer]||MOVIE_SERVERS[0];url=srv.url(id);}
   setPlayer(url);
@@ -1248,7 +1335,7 @@ function playServer(){
 
 $('dv-play-circle').onclick=playServer;
 $('dv-player-placeholder').onclick=playServer;
-$('dv-close-btn').onclick=()=>{$('detail-view').classList.remove('open');$('dv-iframe').src='';document.body.style.overflow='';document.documentElement.style.overflow=''};
+$('dv-close-btn').onclick=()=>{clearDetailHash();$('detail-view').classList.remove('open');$('dv-iframe').src='';document.body.style.overflow='';document.documentElement.style.overflow=''};
 $('se-play-btn').onclick=()=>{currentSeason=parseInt($('tv-season-input').value)||1;currentEp=parseInt($('tv-ep-input').value)||1;playServer()};
 $('s-up').onclick=()=>{const v=parseInt($('tv-season-input').value)+1;$('tv-season-input').value=Math.min(v,tvSeasons.length||99);updateSeasonEps(parseInt($('tv-season-input').value))};
 $('s-down').onclick=()=>{const v=parseInt($('tv-season-input').value)-1;$('tv-season-input').value=Math.max(v,1);updateSeasonEps(parseInt($('tv-season-input').value))};
@@ -1257,7 +1344,6 @@ $('e-down').onclick=()=>{const v=parseInt($('tv-ep-input').value)-1;$('tv-ep-inp
 $('tv-season-input').onchange=()=>updateSeasonEps(parseInt($('tv-season-input').value)||1);
 $('ep-prev-btn').onclick=()=>{if(currentEp>1){currentEp--;$('tv-ep-input').value=currentEp;playServer()}};
 $('ep-next-btn').onclick=()=>{if(!totalEps||currentEp<totalEps){currentEp++;$('tv-ep-input').value=currentEp;playServer()}};
-$('ep-nav-now').textContent='';
 
 function watchTrailer(){
   if(!trailerKey)return;
@@ -1281,7 +1367,7 @@ async function openPerson(id){
   showLoading(true);
   try{
     const [p,c]=await Promise.all([tmdb('/person/'+id),tmdb('/person/'+id+'/combined_credits')]);
-    const heroImg=p.profile_path?'<img class="person-photo" src="'+IMG+'/w185'+p.profile_path+'" alt="">':'<div class="person-photo" style="background:#1e293b;display:flex;align-items:center;justify-content:center"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#64748b\" stroke-width=\"1.5\" width=\"52\" height=\"52\"><circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 20c0-4 3.6-7 8-7s8 3 8 7\"/></svg></div>';
+    const heroImg=p.profile_path?'<img class="person-photo" src="'+IMG+'/w185'+p.profile_path+'" alt="">':'<div class="person-photo" style="background:#1e293b;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" width="52" height="52"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>';
     $('person-hero-wrap').innerHTML='<div class="person-hero">'+heroImg+'<div><div class="person-name">'+p.name+'</div>'+(p.known_for_department?'<span class="person-dept">'+p.known_for_department+'</span>':'')+'</div></div>';
     $('person-bio').textContent=p.biography?p.biography.slice(0,800)+(p.biography.length>800?'...':''):'';
     const allWorks=(c.cast||[]).filter(w=>w.media_type==='movie'||w.media_type==='tv').sort((a,b)=>(b.popularity||0)-(a.popularity||0));
@@ -1293,7 +1379,7 @@ async function openPerson(id){
       const ct=w.media_type==='movie'?'movie':'tv';
       const r=w.vote_average?w.vote_average.toFixed(1):'';
       const yr=getYear(w)?'<span>'+getYear(w)+'</span>':'';
-      const badge=r?'<span class="card-rating-badge">★ '+r+'</span>':'';
+      const badge=r?'<span class="card-rating-badge">\u2605 '+r+'</span>':'';
       return '<div class="post-card" onclick="closePerson();triggerDetailTransition(window._pw['+i+'])">'+
              '<div class="thumb-wrap"><img src="'+imgUrl(w.poster_path,'w342')+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">'+
              '<span class="card-label" style="background:'+typeBg(ct)+'">'+typeLabel(ct)+'</span>'+badge+'</div>'+
@@ -1310,7 +1396,6 @@ function showSkeletons(){
   $('posts-grid').innerHTML=Array(20).fill(0).map(()=>`<div class="skeleton-card"><div class="skel-thumb skeleton"></div><div class="skel-body"><div class="skel-line skeleton"></div><div class="skel-line short skeleton"></div></div></div>`).join('');
 }
 
-
 // ── VOICE SEARCH ─────────────────────────────────────────────────────────────
 (function(){
   const vBtn=$('voice-search-btn');
@@ -1324,8 +1409,53 @@ function showSkeletons(){
   vBtn.onclick=()=>{if(vBtn.classList.contains('listening')){rec.stop();}else{rec.start();vBtn.classList.add('listening');}};
 })();
 
+// -- DEEP LINKING ----------------------------------------------------------
+function slugify(s){
+  return (s||'').toLowerCase().replace(/[^a-z0-9 ]/g,'').trim().replace(/ +/g,'-').substring(0,60);
+}
+function setDetailHash(item){
+  var slug=slugify(getTitle(item));
+  var type=item.contentType;
+  window.history.replaceState(null,'','#/'+type+'/'+slug+'/'+item.id);
+}
+function clearDetailHash(){
+  window.history.replaceState(null,'',location.pathname+location.search);
+}
+async function openFromHash(){
+  var hash=window.location.hash;
+  if(!hash||hash.indexOf('#/')!==0)return;
+  var parts=hash.slice(2).split('/');
+  if(parts.length<3)return;
+  var type=parts[0];
+  var id=parseInt(parts[parts.length-1]);
+  if(!id||type!=='movie'&&type!=='tv'&&type!=='anime')return;
+  try{
+    var item;
+    if(type==='anime'){
+      var q='query($id:Int){Media(id:$id,type:ANIME){id title{romaji english}coverImage{extraLarge large}averageScore startDate{year month day}format description(asHtml:false)}}';
+      var r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:{id:id}})});
+      var d=await r.json();
+      var m=d&&d.data&&d.data.Media;
+      if(!m)return;
+      var atitle=(m.title&&(m.title.english||m.title.romaji))||'';
+      var sd=m.startDate||{};
+      var mon=sd.month?String(sd.month).padStart(2,'0'):'01';
+      var day=sd.day?String(sd.day).padStart(2,'0'):'01';
+      var date=sd.year?(sd.year+'-'+mon+'-'+day):'';
+      item={id:m.id,idMal:null,name:atitle,first_air_date:date,vote_average:m.averageScore?+(m.averageScore/10).toFixed(1):0,poster_path:(m.coverImage&&(m.coverImage.extraLarge||m.coverImage.large))||null,overview:(m.description||'').replace(/<[^>]+>/g,''),contentType:'anime'};
+    }else{
+      var d2=await tmdb('/'+type+'/'+id,{});
+      if(!d2||!d2.id)return;
+      item=Object.assign({},d2,{contentType:type});
+    }
+    openDetail(item);
+  }catch(ex){}
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
 showSkeletons();
 loadTab(currentTab);
+openFromHash();
 </script>
+<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="f8483d00-4eb8-475b-bad2-c26f5fd266f6"></script></body>
 </html>
