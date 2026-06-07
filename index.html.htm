@@ -1,5 +1,4 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -305,6 +304,19 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .dt-spinner{width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:rgba(255,255,255,.75);border-right-color:rgba(220,38,38,.6);animation:dtSpin 1s linear infinite;opacity:0;transition:opacity .4s ease}
 #detail-transition.active .dt-spinner{opacity:1}
 @keyframes dtSpin{to{transform:rotate(360deg)}}
+/* SEARCH SUGGESTIONS */
+.search-suggest{position:absolute;top:calc(100% + 8px);right:0;width:380px;max-width:92vw;background:#111827;border:1px solid #1e293b;border-radius:10px;z-index:10000;box-shadow:0 12px 40px rgba(0,0,0,.85);display:none;max-height:440px;overflow-y:auto}
+.search-suggest.show{display:block}
+.sug-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.04)}
+.sug-item:last-child{border-bottom:none}
+.sug-item:hover,.sug-item.focused{background:rgba(255,255,255,.07)}
+.sug-poster{width:34px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;background:#1e293b}
+.sug-photo{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;background:#1e293b;border:1.5px solid rgba(255,0,0,.35)}
+.sug-info{flex:1;min-width:0}
+.sug-title{font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sug-meta{font-size:10px;color:#64748b;margin-top:1px;display:flex;align-items:center;gap:4px}
+.sug-type{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;text-transform:uppercase;color:#fff}
+.sug-divider{padding:5px 12px;font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.8px;background:rgba(0,0,0,.3)}
 </style>
   <script type="module">"use strict";(()=>{var B="0.5.5";var y={HIGHLIGHT_COLOR:"#0079F2",HIGHLIGHT_BG:"#0079F210",ALLOWED_PARENT_DOMAINS:[".replit.dev",".replit.com",".replit-staging.com",".rp-humain.com",".repl.co"],THEME_PREVIEW_STYLE_ID:"replit-theme-preview",MAX_SIBLING_HIGHLIGHTERS:1e3,MAX_DESCENDANTS_FOR_SCREENSHOT:1500},ie=`
   [contenteditable] {
@@ -454,7 +466,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 <!-- HEADER -->
 <div id="main-header">
   <div class="header-wrapper">
-    <span class="logo-text" onclick="window.scrollTo({top:0,behavior:'smooth'});document.getElementById('search-input').value='';loadTab('movie')">
+    <span class="logo-text" onclick="location.reload()">
       <span class="logo-inner">G<img class="logo-img" src="https://i.postimg.cc/SshGJbvh/apple-touch-icon.png" alt="o">&nbsp;TO CINEMA<span class="logo-tld">.net</span></span>
     </span>
     <nav><ul class="menu-nav" id="menu-nav">
@@ -721,6 +733,7 @@ let prevIframeSrc = '', prevPlayerVisible = false;
 let currentDlUrl = '', currentPlUrl = '';
 let aurlType = 'download';
 let advLangVal = '', advLangOpen = false;
+let discoverParams=null,discoverPage=1;
 const detailCache = {};
 const cache = {};
 
@@ -934,7 +947,7 @@ function appendCached(t,items,page){
 // ── TABS ─────────────────────────────────────────────────────────────────────
 async function loadTab(type){
   currentTab=type;localStorage.setItem('pm_tab',type);
-  discoverItems=null;displayCount=20;lastPage=0;
+  discoverItems=null;discoverParams=null;discoverPage=1;displayCount=20;lastPage=0;
   ['movie','tv','anime'].forEach(t=>{
     const el=$(t==='movie'?'tab-movie':t==='tv'?'tab-tv':'tab-anime');
     if(el)el.classList.toggle('active',t===type);
@@ -1011,12 +1024,28 @@ function renderGrid(){
   });
 }
 
-// ── INFINITE SCROLL ──────────────────────────────────────────────────────────
+// ── INFINITE SCROLL ──────────────────────────────────────────────────────────────────────────────
 const obs=new IntersectionObserver(async entries=>{
   if(!entries[0].isIntersecting||fetching)return;
   const source=discoverItems||allItems;
   if(displayCount<source.length){displayCount=Math.min(displayCount+20,source.length);renderGrid();return}
-  if(discoverItems||allItems.length>=500)return;
+  if(discoverParams){
+    fetching=true;$('load-more-spinner').style.display='block';
+    discoverPage++;
+    try{
+      const d=await tmdb(discoverParams.ep,{...discoverParams.params,page:discoverPage});
+      const newItems=(d.results||[]).map(r=>({...r,contentType:discoverParams.ct}));
+      if(newItems.length){
+        const ids=new Set(discoverItems.map(i=>String(i.id)));
+        discoverItems=[...discoverItems,...newItems.filter(i=>!ids.has(String(i.id)))];
+        displayCount=Math.min(displayCount+20,discoverItems.length);
+        renderGrid();
+      }
+    }catch(e){}
+    fetching=false;$('load-more-spinner').style.display='none';
+    return;
+  }
+  if(allItems.length>=500)return;
   fetching=true;$('load-more-spinner').style.display='block';
   const next=lastPage+1;
   try{const ni=await fetchPage(currentTab,next);appendCached(currentTab,ni,next);allItems=getCached(currentTab).items;lastPage=next;displayCount=Math.min(displayCount+20,allItems.length);renderGrid();}catch{}
@@ -1047,7 +1076,86 @@ async function doSearch(){
   showLoading(false);
 }
 $('search-btn').onclick=doSearch;
-$('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+$('search-input').addEventListener('keydown',e=>{if(e.key==='Enter'){hideSuggest();doSearch()}});
+
+// ── LIVE SEARCH SUGGESTIONS ────────────────────────────────────────────────────────────────────
+const suggestEl=(function(){
+  const inp=$('search-input');
+  const sug=document.createElement('div');
+  sug.className='search-suggest';sug.id='search-suggest';
+  inp.closest('.search-box').appendChild(sug);return sug;
+})();
+function hideSuggest(){suggestEl.classList.remove('show');}
+(function(){
+  const inp=$('search-input'),sug=suggestEl;
+  let sugTimer=null,sugIdx=-1,lastSugQ='';
+  const PH_SQ='https://placehold.co/34x50/111827/333';
+  const AVPH_SQ='https://placehold.co/34x34/111827/333';
+  async function fetchSuggestions(q){
+    if(!q){hideSuggest();return}
+    try{
+      const d=await tmdb('/search/multi',{query:q,page:1});
+      const results=d.results||[];
+      if(!results.length){hideSuggest();return}
+      const people=results.filter(r=>r.media_type==='person').slice(0,3);
+      const media=results.filter(r=>r.media_type==='movie'||r.media_type==='tv').slice(0,8);
+      let html='';
+      if(people.length){
+        html+='<div class="sug-divider">People</div>';
+        html+=people.map(p=>{
+          const src=p.profile_path?`${IMG}/w92${p.profile_path}`:AVPH_SQ;
+          const nm=(p.name||'').replace(/</g,'&lt;');
+          const dept=p.known_for_department||'Person';
+          return `<div class="sug-item" data-stype="person" data-id="${p.id}"><img class="sug-photo" src="${src}" onerror="this.src='${AVPH_SQ}'" loading="lazy"><div class="sug-info"><div class="sug-title">${nm}</div><div class="sug-meta">${dept}</div></div></div>`;
+        }).join('');
+      }
+      if(media.length){
+        if(people.length)html+='<div class="sug-divider">Movies &amp; Shows</div>';
+        html+=media.map(r=>{
+          const ct=r.media_type==='tv'?'tv':'movie';
+          const src=r.poster_path?`${IMG}/w92${r.poster_path}`:PH_SQ;
+          const yr=(r.release_date||r.first_air_date||'').slice(0,4);
+          const bg=typeBg(ct);const lbl=ct==='tv'?'TV':'MOVIE';
+          const stitle=r.title||r.name||'';
+          const disp=stitle.replace(/</g,'&lt;');
+          const safe=stitle.replace(/"/g,'&quot;');
+          const yrHtml=yr?'<span>'+yr+'</span>':'';
+          return '<div class="sug-item" data-stype="media" data-ct="'+ct+'" data-id="'+r.id+'" data-stitle="'+safe+'"><img class="sug-poster" src="'+src+'" onerror="this.src=\''+PH_SQ+'\'" loading="lazy"><div class="sug-info"><div class="sug-title">'+disp+'</div><div class="sug-meta"><span class="sug-type" style="background:'+bg+'">'+lbl+'</span>'+yrHtml+'</div></div></div>';
+        }).join('');
+      }
+      sug.innerHTML=html;
+      sug.querySelectorAll('.sug-item').forEach(el=>{
+        el.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          if(el.dataset.stype==='person'){openPerson(parseInt(el.dataset.id));hideSuggest();inp.value='';}
+          else{
+            const id=parseInt(el.dataset.id),ct=el.dataset.ct,stitle=el.dataset.stitle;
+            hideSuggest();inp.value='';
+            const item={id,contentType:ct};
+            if(ct==='tv')item.name=stitle;else item.title=stitle;
+            triggerDetailTransition(item);
+          }
+        });
+      });
+      sug.classList.add('show');
+    }catch(e){hideSuggest();}
+  }
+  inp.addEventListener('input',()=>{
+    const q=inp.value.trim();clearTimeout(sugTimer);
+    if(q===lastSugQ)return;lastSugQ=q;
+    if(!q){hideSuggest();return}
+    sugTimer=setTimeout(()=>fetchSuggestions(q),280);
+  });
+  inp.addEventListener('focus',()=>{if(inp.value.trim()&&sug.innerHTML.trim())sug.classList.add('show')});
+  inp.addEventListener('blur',()=>setTimeout(()=>{hideSuggest();sugIdx=-1;},180));
+  inp.addEventListener('keydown',e=>{
+    const items=[...sug.querySelectorAll('.sug-item')];if(!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();sugIdx=Math.min(sugIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('focused',i===sugIdx));}
+    else if(e.key==='ArrowUp'){e.preventDefault();sugIdx=Math.max(sugIdx-1,0);items.forEach((el,i)=>el.classList.toggle('focused',i===sugIdx));}
+    else if(e.key==='Escape'){hideSuggest();}
+    else if(e.key==='Enter'&&sugIdx>=0&&items[sugIdx]){items[sugIdx].dispatchEvent(new MouseEvent('mousedown'));}
+  });
+})();
 
 // ── ADV FILTER TOGGLE ────────────────────────────────────────────────────────
 $('adv-toggle-btn').onclick=()=>{
@@ -1085,21 +1193,28 @@ buildLangList();
 $('adv-discover').onclick=async()=>{
   const type=$('adv-type').value,lang=advLangVal,genre=$('adv-genre').value;
   const sort=$('adv-sort').value,year=$('adv-year').value;
-  const params={sort_by:sort,page:1};
+  const params={sort_by:sort};
   if(genre)params.with_genres=genre;
   if(lang)params.with_original_language=lang;
   if(year)(type==='movie'?params.primary_release_year=year:params.first_air_date_year=year);
   if(type==='anime'){params.with_genres=genre||'16';params.with_origin_country='JP';delete params.with_original_language}
   const ep=type==='movie'?'/discover/movie':'/discover/tv';
-  $('section-title').textContent='Discover Results';showLoading(true);
+  const ct=type==='anime'?'anime':type;
+  discoverParams={ep,params,ct};discoverPage=1;
+  const labelParts=[];
+  if(lang){const lObj=ALL_LANGUAGES.find(x=>x.v===lang);if(lObj)labelParts.push(lObj.l);}
+  if(year)labelParts.push(year);
+  const typeNames={movie:'Movies',tv:'TV Shows',anime:'Anime'};
+  $('section-title').textContent=(labelParts.length?labelParts.join(' · ')+' ':'')+(typeNames[type]||type);
+  showLoading(true);
   try{
-    const d=await tmdb(ep,params);
-    const ct=type==='anime'?'anime':type;
-    discoverItems=d.results.map(r=>({...r,contentType:ct}));
-    displayCount=discoverItems.length;renderGrid();
+    const d=await tmdb(ep,{...params,page:1});
+    discoverItems=(d.results||[]).map(r=>({...r,contentType:ct}));
+    displayCount=Math.min(20,discoverItems.length);renderGrid();
   }catch{}
   showLoading(false);
   $('adv-bar').classList.remove('open');$('adv-toggle-btn').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
 };
 
 // ── TRENDING TICKER ──────────────────────────────────────────────────────────
@@ -1473,5 +1588,3 @@ showSkeletons();
 loadTab(currentTab);
 openFromHash();
 </script>
-<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="f8483d00-4eb8-475b-bad2-c26f5fd266f6"></script></body>
-</html>
