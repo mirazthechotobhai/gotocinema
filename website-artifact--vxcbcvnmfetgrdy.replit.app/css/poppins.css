@@ -1,0 +1,40 @@
+/* Poppins - Regular 400 */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('poppins/pxiEyp8kv8JHgFVrFJA.ttf') format('truetype');
+}
+/* Poppins - Medium 500 */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('poppins/pxiByp8kv8JHgFVrLCz7V1s.ttf') format('truetype');
+}
+/* Poppins - SemiBold 600 */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('poppins/pxiByp8kv8JHgFVrLDD4V1s.ttf') format('truetype');
+}
+/* Poppins - Bold 700 */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('poppins/pxiByp8kv8JHgFVrLEj6V1s.ttf') format('truetype');
+}
+/* Poppins - ExtraBold 800 */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('poppins/pxiByp8kv8JHgFVrLGT9V1s.ttf') format('truetype');
+}
