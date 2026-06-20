@@ -1,10 +1,143 @@
-<html lang="en"><head>
+<html lang="en"><head><script>
+// ── COLOR CUSTOMIZE SYSTEM ──────────────────────────────────────
+const CLR_CODE='86800';
+const CLR_KEYS=['c_bg','c_grad_l','c_grad_m','c_grad_r','c_btn_1','c_btn_2','c_bg2','c_nav','c_text','c_text2','c_text3','c_rating'];
+const CLR_DEFS={c_bg:'#262626',c_grad_l:'#262626',c_grad_m:'#ff0000',c_grad_r:'#262626',c_btn_1:'#ff0000',c_btn_2:'#cc0000',c_bg2:'#181818',c_nav:'#262626',c_text:'#ffffff',c_text2:'#eeeeee',c_text3:'#888888',c_rating:'#f5c518'};
+let clrLocked=false;
+let clrCurrent=Object.assign({},CLR_DEFS);
+
+function clrApply(data){
+  const c=Object.assign({},CLR_DEFS,data);
+  clrCurrent=Object.assign({},c);
+  const s=document.documentElement.style;
+  s.setProperty('--c-bg',c.c_bg);
+  s.setProperty('--c-bg2',c.c_bg2);
+  s.setProperty('--c-nav',c.c_nav);
+  s.setProperty('--c-grad-l',c.c_grad_l);
+  s.setProperty('--c-grad-m',c.c_grad_m);
+  s.setProperty('--c-grad-r',c.c_grad_r);
+  s.setProperty('--c-btn-1',c.c_btn_1);
+  s.setProperty('--c-btn-2',c.c_btn_2);
+  s.setProperty('--c-text',c.c_text);
+  s.setProperty('--c-text2',c.c_text2);
+  s.setProperty('--c-text3',c.c_text3);
+  s.setProperty('--c-rating',c.c_rating);
+}
+
+function clrSyncUI(data){
+  const c=Object.assign({},CLR_DEFS,data);
+  CLR_KEYS.forEach(k=>{
+    const inp=document.getElementById('ci-'+k);
+    const bg=document.getElementById('swb-'+k);
+    const v=(c[k]||'').substring(0,7);
+    if(inp)inp.value=v;
+    if(bg)bg.style.background=v;
+  });
+}
+
+function clrSetLockUI(locked){
+  clrLocked=locked;
+  const btn=document.getElementById('clr-lk-btn');
+  const icon=document.getElementById('clr-lk-icon');
+  const txt=document.getElementById('clr-lk-txt');
+  if(!btn)return;
+  if(locked){btn.className='clr-lk-btn is-locked';icon.textContent='🔒';txt.textContent='Locked — Click to Unlock';}
+  else{btn.className='clr-lk-btn is-unlocked';icon.textContent='🔓';txt.textContent='Unlocked — Click to Lock';}
+}
+
+function initColorWatch(){
+  try{
+    fbDb.collection(ADM_COL).doc('colors').onSnapshot(snap=>{
+      if(snap&&snap.exists){
+        const d=snap.data();
+        clrApply(d);
+        clrSyncUI(d);
+        clrSetLockUI(!!d.__locked);
+      }
+    });
+  }catch(e){console.warn('clr:',e.message);}
+}
+
+function openColorPanel(){
+  if(!isAdmin)return;
+  // Sync current live values to pickers before showing
+  clrSyncUI(clrCurrent);
+  document.getElementById('clr-overlay').classList.add('show');
+}
+function clrClose(){document.getElementById('clr-overlay').classList.remove('show');}
+
+function clrPrev(k,v){
+  const bg=document.getElementById('swb-'+k);
+  if(bg)bg.style.background=v;
+}
+
+async function clrSaveGroup(keys){
+  if(clrLocked){clrToast('⛔ Colors are locked! Unlock first.');return;}
+  if(!isAdmin)return;
+  try{
+    const upd={};
+    keys.forEach(k=>{
+      const inp=document.getElementById('ci-'+k);
+      if(inp)upd[k]=inp.value;
+    });
+    await fbDb.collection(ADM_COL).doc('colors').set(upd,{merge:true});
+    clrToast('✅ Saved!');
+  }catch(e){clrToast('❌ '+e.message);}
+}
+
+async function clrResetAll(){
+  if(clrLocked){clrToast('⛔ Colors are locked! Unlock first.');return;}
+  if(!isAdmin)return;
+  if(!confirm('Reset all colors to default?'))return;
+  try{
+    await fbDb.collection(ADM_COL).doc('colors').set(CLR_DEFS,{merge:false});
+    clrToast('✅ Colors reset to default!');
+  }catch(e){clrToast('❌ '+e.message);}
+}
+
+function clrLockOpen(){
+  const inp=document.getElementById('clr-code-inp');
+  const msg=document.getElementById('clr-code-msg');
+  if(inp)inp.value='';
+  if(msg){msg.textContent='';msg.className='clr-code-msg';}
+  const t=document.getElementById('clr-cp-title');
+  const d=document.getElementById('clr-cp-desc');
+  if(t)t.textContent=clrLocked?'🔓 Unlock Colors':'🔒 Lock Colors';
+  if(d)d.textContent=clrLocked?'Enter the 5-digit code to unlock color changes.':'Enter the 5-digit code to prevent color changes.';
+  document.getElementById('clr-code-pop').classList.add('show');
+  setTimeout(()=>{const i=document.getElementById('clr-code-inp');if(i)i.focus();},200);
+}
+function clrCodeCancel(){document.getElementById('clr-code-pop').classList.remove('show');}
+async function clrCodeOk(){
+  const inp=document.getElementById('clr-code-inp');
+  const msg=document.getElementById('clr-code-msg');
+  if(!inp||!msg)return;
+  const v=inp.value.trim();
+  if(v!==CLR_CODE){msg.textContent='❌ Wrong password';msg.className='clr-code-msg err';return;}
+  const nl=!clrLocked;
+  try{
+    await fbDb.collection(ADM_COL).doc('colors').set({__locked:nl},{merge:true});
+    msg.textContent=nl?'✅ Colors locked!':'✅ Colors unlocked!';
+    msg.className='clr-code-msg ok';
+    setTimeout(()=>document.getElementById('clr-code-pop').classList.remove('show'),1400);
+  }catch(e){msg.textContent='❌ '+e.message;msg.className='clr-code-msg err';}
+}
+function clrToast(msg){
+  const t=document.getElementById('clr-toast');
+  if(!t)return;
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._to);t._to=setTimeout(()=>t.style.opacity='0',2500);
+}
+// Initialize color watch — wait for Firebase
+(function(){const wait=setInterval(()=>{if(typeof fbDb!=='undefined'&&typeof ADM_COL!=='undefined'){clearInterval(wait);initColorWatch();}},300);})();
+</script>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>
    Go To Cinema - Watch Movies, TV Shows &amp; Anime
   </title>
-  <link href="css/poppins.css" rel="stylesheet">
+  <link href="../fonts.googleapis.com/css2/family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap.css" rel="stylesheet">
+  <link href="../fonts.googleapis.com/css2/family=Montserrat:wght@100;200;300&amp;display=swap.css" rel="stylesheet">
   <style>
    *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#262626;color:#fff;font-family:'Poppins',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
@@ -490,7 +623,112 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
   color:#fca5a5;transform:translateY(-1px);
   box-shadow:0 4px 14px rgba(239,68,68,.15);
 }
-  </style>
+  
+/* NEW LOGO BUTTON */
+.logo-btn{position:relative;padding:10px 20px;font-size:16px;background:linear-gradient(90deg,#262626,#ff0000,#262626);color:white;border:none;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:all 0.3s ease;font-weight:600;line-height:1;text-decoration:none;font-family:'Poppins',sans-serif;width:fit-content;align-self:center;justify-self:start;transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.4)}
+.logo-btn:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.5)}
+.logo-btn .cinema-text{font-family:'Montserrat',sans-serif;font-weight:100;letter-spacing:0.18em;color:#ffffff!important}
+.logo-btn .icon-container{position:relative;width:24px;height:24px;flex-shrink:0}
+.logo-btn .licon{position:absolute;top:0;left:0;width:24px;height:24px;opacity:0;visibility:hidden;transition:opacity 0.3s ease,transform 0.3s ease}
+.logo-btn .ldefault-icon{opacity:1;visibility:visible;color:white}
+.logo-btn.lauto .ldefault-icon{opacity:0;visibility:hidden}
+.logo-btn.lauto .licon.lactive{opacity:1;visibility:visible;transform:translateY(0) scale(1);animation:nav-color-cycle 4s linear infinite}
+
+:root{
+  --c-bg:#262626;--c-bg2:#181818;--c-nav:#262626;
+  --c-grad-l:#262626;--c-grad-m:#ff0000;--c-grad-r:#262626;
+  --c-btn-1:#ff0000;--c-btn-2:#cc0000;
+  --c-text:#ffffff;--c-text2:#eeeeee;--c-text3:#888888;
+  --c-rating:#f5c518;
+}
+body{background:var(--c-bg)!important;color:var(--c-text)!important}
+html{background:var(--c-bg)!important}
+.topbar-wrapper{background:linear-gradient(180deg,var(--c-grad-l),var(--c-grad-m),var(--c-grad-r))!important}
+#main-header{background:linear-gradient(90deg,var(--c-grad-l),var(--c-grad-m),var(--c-grad-r))!important}
+#featured-wrapper{background:linear-gradient(180deg,var(--c-grad-l),var(--c-grad-m),var(--c-grad-r))!important}
+.logo-btn{background:linear-gradient(90deg,var(--c-grad-l),var(--c-grad-m),var(--c-grad-r))!important}
+.breakhead{background:var(--c-grad-m)!important}
+::-webkit-scrollbar-thumb{background:var(--c-btn-1)!important}
+.section-heading{color:var(--c-text)!important}
+.section-heading::after{background:linear-gradient(to right,var(--c-btn-1),transparent)!important}
+.feat-card,.post-card,.skeleton-card{background:var(--c-bg2)!important}
+.feat-card .thumb-wrap,.post-card .thumb-wrap{background:var(--c-bg2)!important}
+.feat-card .card-title,.post-card .card-title{color:var(--c-text2)!important}
+.feat-card .card-meta,.post-card .card-meta{color:var(--c-text3)!important}
+.card-rating,.card-rating-badge{color:var(--c-rating)!important}
+.scroll-top-btn{background:var(--c-btn-1)!important}
+.loading-spinner{border-top-color:var(--c-btn-1)!important}
+.menu-nav li a{background:var(--c-nav)!important}
+.menu-nav li a.active{background:var(--c-nav)!important}
+.search-btn{color:var(--c-btn-1)!important}
+.adv-toggle-btn.open{background:var(--c-btn-1)!important}
+#adv-discover,.se-play-btn,.auth-submit,.auth-save-profile-btn,.adm-sbtn,.btn-trailer{background:linear-gradient(135deg,var(--c-btn-1),var(--c-btn-2))!important}
+.auth-tab-btn.active{background:var(--c-btn-1)!important}
+.ep-nav-btn:hover{background:var(--c-btn-1)!important;border-color:var(--c-btn-1)!important}
+#tab-livetv .live-dot{color:var(--c-btn-1)!important}
+.auth-input:focus,.auth-bio-input:focus{border-color:var(--c-btn-1)!important}
+/* ── Auth Redesign ── */
+.auth-overlay{background:rgba(0,0,0,.88)!important}
+.auth-box{background:#0a0d18!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:20px!important;padding:28px 24px 22px!important;box-shadow:0 24px 64px rgba(0,0,0,.7)!important}
+.auth-title{color:#f1f5f9!important;font-size:19px!important;font-weight:900!important;letter-spacing:-.5px!important}
+.auth-sub{color:#4b5563!important;font-size:11.5px!important;margin-bottom:22px!important}
+.auth-tabs{border:1px solid rgba(255,255,255,.07)!important;border-radius:10px!important;background:#111827!important;padding:3px!important;gap:3px!important;display:flex!important}
+.auth-tab-btn{border-radius:7px!important;font-size:12px!important;font-weight:600!important;transition:all .2s!important;color:#6b7280!important;background:transparent!important}
+.auth-tab-btn.active{color:#fff!important;box-shadow:0 2px 8px rgba(0,0,0,.4)!important}
+.auth-input{background:#111827!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px!important;padding:12px 14px!important;color:#f1f5f9!important;font-size:13px!important;margin-bottom:10px!important;width:100%!important;box-sizing:border-box!important;transition:border .2s!important}
+.auth-input::placeholder{color:#374151!important}
+.auth-submit{border-radius:10px!important;padding:12px!important;font-size:13px!important;font-weight:700!important;letter-spacing:.3px!important;transition:opacity .2s,transform .1s!important;margin-top:4px!important}
+.auth-submit:hover:not(:disabled){opacity:.88!important;transform:translateY(-1px)!important}
+.auth-submit:active{transform:translateY(0)!important}
+.auth-close-btn{color:#374151!important;font-size:18px!important;transition:color .2s!important;top:14px!important;right:16px!important}
+.auth-close-btn:hover{color:#9ca3af!important}
+.auth-logout-btn{background:#111827!important;border:1px solid rgba(255,255,255,.07)!important;border-radius:10px!important;color:#6b7280!important;font-size:12px!important;font-weight:600!important;transition:all .2s!important}
+.auth-logout-btn:hover{background:#1f2937!important;color:#9ca3af!important;border-color:rgba(255,255,255,.12)!important}
+.auth-msg.err{color:#f87171!important}.auth-msg.ok{color:#4ade80!important}
+/* ── Color Panel ── */
+#clr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:15000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+#clr-overlay.show{opacity:1;visibility:visible}
+#clr-box{background:#0a0d18;border:1px solid rgba(255,255,255,.09);border-radius:18px;width:420px;max-width:95vw;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.8)}
+#clr-box::-webkit-scrollbar{width:3px}
+#clr-box::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)!important;border-radius:10px}
+.clr-hd{position:sticky;top:0;background:#0a0d18;border-bottom:1px solid rgba(255,255,255,.07);padding:15px 18px;display:flex;align-items:center;justify-content:space-between;z-index:2;border-radius:18px 18px 0 0}
+.clr-hd-title{font-size:14px;font-weight:800;color:#f1f5f9;display:flex;align-items:center;gap:8px}
+.clr-hd-sub{font-size:10px;color:#374151;font-weight:400;margin-top:2px}
+.clr-x{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#6b7280;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.clr-x:hover{background:rgba(239,68,68,.15);color:#f87171;border-color:rgba(239,68,68,.25)}
+.clr-body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.clr-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:10px}
+.clr-lbl{flex:1;min-width:0}
+.clr-lbl-main{font-size:11.5px;font-weight:600;color:#cbd5e1}
+.clr-lbl-sub{font-size:10px;color:#374151;margin-top:2px;line-height:1.3}
+.clr-swatches{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.clr-sw{width:30px;height:30px;border-radius:7px;border:1.5px solid rgba(255,255,255,.18);overflow:hidden;position:relative;cursor:pointer;flex-shrink:0}
+.clr-sw input[type=color]{opacity:0;position:absolute;inset:-5px;width:calc(100%+10px);height:calc(100%+10px);cursor:pointer;border:none;padding:0}
+.clr-sw-bg{position:absolute;inset:0;border-radius:5px;pointer-events:none}
+.clr-sw-arrow{font-size:9px;color:#374151;flex-shrink:0;user-select:none}
+.clr-sb{padding:5px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#e2e8f0;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .2s;font-family:'Poppins',sans-serif;white-space:nowrap}
+.clr-sb:hover{background:var(--c-btn-1,#f00);border-color:var(--c-btn-1,#f00);color:#fff}
+.clr-foot{padding:10px 14px 16px;display:flex;flex-direction:column;gap:7px;border-top:1px solid rgba(255,255,255,.05)}
+.clr-reset{width:100%;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#6b7280;border-radius:9px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.clr-reset:hover{background:rgba(255,255,255,.09);color:#94a3b8;border-color:rgba(255,255,255,.14)}
+.clr-lk-btn{width:100%;padding:10px;border-radius:9px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;border:1.5px solid;transition:all .2s}
+.clr-lk-btn.is-locked{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.28);color:#f87171}
+.clr-lk-btn.is-unlocked{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.22);color:#4ade80}
+#clr-code-pop{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:16000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+#clr-code-pop.show{opacity:1;visibility:visible}
+.clr-cb{background:#0d1120;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:26px 22px;width:270px;max-width:90vw;text-align:center}
+.clr-cb h3{font-size:14px;font-weight:800;color:#f1f5f9;margin-bottom:5px}
+.clr-cb p{font-size:11px;color:#6b7280;margin-bottom:16px;line-height:1.5}
+.clr-code-inp{width:100%;background:#111827;border:1.5px solid rgba(255,255,255,.1);border-radius:9px;padding:12px;color:#fff;font-family:'Poppins',sans-serif;font-size:24px;font-weight:900;letter-spacing:14px;text-align:center;outline:none;margin-bottom:8px;box-sizing:border-box;transition:border .2s}
+.clr-code-inp:focus{border-color:var(--c-btn-1,#f00)}
+.clr-code-msg{font-size:11px;font-weight:600;min-height:16px;margin-bottom:10px}
+.clr-code-msg.ok{color:#4ade80}.clr-code-msg.err{color:#f87171}
+.clr-code-ok{width:100%;padding:11px;background:linear-gradient(135deg,var(--c-btn-1,#f00),var(--c-btn-2,#c00));color:#fff;border:none;border-radius:9px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:7px;transition:opacity .2s}
+.clr-code-ok:hover{opacity:.88}
+.clr-code-cancel{width:100%;padding:9px;background:transparent;border:1px solid rgba(255,255,255,.08);color:#4b5563;border-radius:9px;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
+.clr-code-cancel:hover{border-color:rgba(255,255,255,.15);color:#6b7280}
+#clr-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0d1120;color:#f1f5f9;padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.7);transition:opacity .3s;border:1px solid rgba(255,255,255,.09);white-space:nowrap;opacity:0;pointer-events:none}
+</style>
   <script>
    (function() {
   var initialized = false;
@@ -587,16 +825,20 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
   <!-- HEADER -->
   <div id="main-header">
    <div class="header-wrapper">
-    <span class="logo-text" onclick="location.reload()">
-     <span class="logo-inner">
-      G
-      <img alt="o" class="logo-img" src="images/apple-touch-icon.png">
-      TO CINEMA
-      <span class="logo-tld">
-       .net
-      </span>
-     </span>
-    </span>
+    <button class="logo-btn" id="logoBtn" onclick="loadTab('movie');window.scrollTo({top:0,behavior:'smooth'})">
+    <span>G<img src="../i.postimg.cc/nLX5mPs6/icon.png" alt="O" style="height:0.8125em;width:0.8125em;object-fit:contain;vertical-align:middle;margin:0 0 0 1px;display:inline-block;position:relative;top:-1px;"> TO <span class="cinema-text">CINEMA</span></span>
+    <div class="icon-container">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="licon ldefault-icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M19.993 9.108c.383 .4 .687 .863 .893 1.368a4.195 4.195 0 0 1 .006 3.166a4.37 4.37 0 0 1 -.887 1.372a20.233 20.233 0 0 1 -2.208 2a20.615 20.615 0 0 1 -2.495 1.669a21.322 21.322 0 0 1 -5.622 2.202a4.213 4.213 0 0 1 -3.002 -.404a3.98 3.98 0 0 1 -1.163 -.967a3.796 3.796 0 0 1 -.695 -1.312c-1.199 -3.902 -1.022 -8.312 .134 -12.23c.609 -2.057 2.643 -3.349 4.737 -2.874c3.88 .88 7.52 3.147 10.302 6.01"></path><path d="M14.044 13.034c.67 -.505 .67 -1.489 0 -2.01a14.824 14.824 0 0 0 -1.498 -1.044a15.783 15.783 0 0 0 -1.62 -.865c-.77 -.35 -1.63 .139 -1.753 .973a15.385 15.385 0 0 0 -.1 3.786a1.232 1.232 0 0 0 1.715 1.027a14.783 14.783 0 0 0 1.694 -.827a14.46 14.46 0 0 0 1.562 -1.035v-.005"></path></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="licon li2"><path d="M18.3636 3.5H5.63636C4.67194 3.5 3.74702 3.87707 3.06507 4.54825C2.38312 5.21943 2 6.12975 2 7.07895V14.2368C2 15.186 2.38312 16.0964 3.06507 16.7675C3.74702 17.4387 4.67194 17.8158 5.63636 17.8158H18.3636C19.3281 17.8158 20.253 17.4387 20.9349 16.7675C21.6169 16.0964 22 15.186 22 14.2368V7.07895C22 6.12975 21.6169 5.21943 20.9349 4.54825C20.253 3.87707 19.3281 3.5 18.3636 3.5ZM9.45455 8.42463V14.3084H7.68V8.42463H5.51636V7.07895H11.6564V8.42463H9.45455ZM16.2982 14.3084H14.3636L11.9182 7.07895H13.88L15.3345 12.3418L16.7927 7.07895H18.7709L16.2982 14.3084Z" fill="currentColor"></path><path d="M6.5419 19.6053C6.5419 19.1111 6.94892 18.7105 7.45099 18.7105H16.5419C17.044 18.7105 17.451 19.1111 17.451 19.6053C17.451 20.0994 17.044 20.5 16.5419 20.5H7.45099C6.94892 20.5 6.5419 20.0994 6.5419 19.6053Z" fill="currentColor"></path></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256" class="licon li3"><path d="M212,80a28,28,0,1,0,28,28A28,28,0,0,0,212,80Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,212,120ZM72,108a28,28,0,1,0-28,28A28,28,0,0,0,72,108ZM44,120a12,12,0,1,1,12-12A12,12,0,0,1,44,120ZM92,88A28,28,0,1,0,64,60,28,28,0,0,0,92,88Zm0-40A12,12,0,1,1,80,60,12,12,0,0,1,92,48Zm72,40a28,28,0,1,0-28-28A28,28,0,0,0,164,88Zm0-40a12,12,0,1,1-12,12A12,12,0,0,1,164,48Zm23.12,100.86a35.3,35.3,0,0,1-16.87-21.14,44,44,0,0,0-84.5,0A35.25,35.25,0,0,1,69,148.82,40,40,0,0,0,88,224a39.48,39.48,0,0,0,15.52-3.13,64.09,64.09,0,0,1,48.87,0,40,40,0,0,0,34.73-72ZM168,208a24,24,0,0,1-9.45-1.93,80.14,80.14,0,0,0-61.19,0,24,24,0,0,1-20.71-43.26,51.22,51.22,0,0,0,24.46-30.67,28,28,0,0,1,53.78,0,51.27,51.27,0,0,0,24.53,30.71A24,24,0,0,1,168,208Z"></path></svg>
+      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" class="licon li4"><path fill="currentColor" d="M3 8q2.5-4 .5-3Q1 7 4 3L0 2q12-.5 6 2L4 8M2 7L1 8L0 7l1-1m4-5q2 2 1-1"></path></svg>
+      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 11" class="licon li5"><path fill="currentColor" d="M6 1a1 1 0 1 1-2 0a1 1 0 0 1 2 0zm2.88 4.18l-1-2A.5.5 0 0 0 7.5 3H2.77a.74.74 0 0 0-.77.65l-1 6.71a.483.483 0 0 0 0 .14a.5.5 0 0 0 .5.5a.49.49 0 0 0 .5-.36l1.22-3.89l.21-.83l.4.44L5 7.6v2.9a.5.5 0 0 0 1 0v-3a.48.48 0 0 0-.1-.28L4.45 5.5L5.5 4h1.71l.92 1.84A.49.49 0 0 0 8.5 6a.5.5 0 0 0 .5-.49a.88.88 0 0 0-.12-.33zM10.5 8a.5.5 0 1 0 0 1a.5.5 0 0 0 0-1zM8.69 8v-.75a.25.25 0 1 0-.5 0V8a.49.49 0 0 0-.25.42v2.08a.5.5 0 0 0 1 0V8.41A.49.49 0 0 0 8.69 8z"></path></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 1024 1024" class="licon li6"><path fill="currentColor" d="M685 641L557 512l338-339q62 70 95.5 156.5T1024 512q-96 0-182.5 34T685 641zM383 339q62-70 95.5-156.5T512 0q96 0 182.5 34T851 129L512 467zM174 129Q292 24 448 5q-2 164-110 288zm119 209Q169 446 4 448q20-156 125-274zm174 174L129 851q-61-70-95-156.5T0 512q96 0 182.5-33.5T339 383zm174 173q-62 70-95.5 156.5T512 1024q-96 0-182.5-33.5T173 895l339-338zm209 210q-118 105-274 125q2-164 110-289zm170-319q-20 156-125 274L731 686q124-108 289-110z"></path></svg>
+      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" class="licon li7"><path fill="currentColor" d="M1.1 9.67c.34-.44.96-.53 1.4-.19c.45.33.53.95.2 1.4c-.33.44-.24 1.06.2 1.4c.44.33 1.07.24 1.4-.2l1.5-2l1.6 1.21l-1.5 1.99c-1 1.33-2.88 1.59-4.21.59C.37 12.88.11 11 1.1 9.67M14.12.7c.45.33.53.96.2 1.4L7.7 10.89L6.1 9.68L12.72.9c.34-.44.96-.53 1.4-.2M12 14c-1.1 0-2-.9-2-2s.9-2 2-2s2 .9 2 2s-.9 2-2 2"></path></svg>
+      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" class="licon li8"><path fill="currentColor" d="M5.81 24.21c-1.01 0-1.84.83-1.84 1.84s.83 1.82 1.84 1.82s1.83-.81 1.83-1.82s-.82-1.83-1.83-1.83zM31.3 8.95c2.19 0 3.98-1.77 3.98-3.97S33.49 1 31.3 1c-2.2 0-3.99 1.78-3.99 3.98s1.79 3.97 3.99 3.97m17.13 35.41l-6.48-7.63s-2.02-11.77-2.02-11.8l-.3-1.33c.01.01-.81-3.71-1.45-6.63c1.01.58 1.92 1.1 1.97 1.13c.05.11 3.43 6.53 3.43 6.53c.26.48.69.83 1.2.98c.52.16 1.07.11 1.55-.15c.48-.24.83-.67.98-1.19c.17-.51.12-1.06-.13-1.53l-3.71-7.05s-.15-.25-.34-.45c-.27-.27-.85-.59-.85-.59l-7.2-4.09c-.91-.46-1.92-.62-2.94-.4c-.42.09-.8.24-1.24.49c-.05.01-1.65.72-2.57 2.88l-3.7 7.43l-5.83 1.13l-.13.05l-5.27-3.71c-1.18-.82-1.33-3.3-1.34-3.4c-.14-1.7-1.12-3.3-2.68-4.41C7.97 9.63 6.26 9.2 4.7 9.45c-1.22.21-2.25.84-2.91 1.76c-.51.72-.78 1.58-.78 2.5l.07.8c.27 1.56 1.23 3.02 2.64 4.03c1.42 1.01 3.12 1.43 4.68 1.17l.37-.07c.04-.02 2.37-.74 3.52.04c0 .01 3.94 2.78 4.99 3.52c-.11.17-.3.55-.29.94c0 .12.01.24.04.36c.21 1.09 1.28 1.82 2.37 1.6l6.99-1.36s.6-.18.85-.36c.33-.23.57-.71.57-.71l1.84-3.69s1.27 5.96 1.29 6.07c-.14.15-5.73 6.06-5.73 6.06l-.21.12c-.55.5-.97 1.15-.97 1.85v12.53c0 1.34 1.17 2.42 2.51 2.42c1.33 0 2.49-1.08 2.49-2.42V36.15c1-.53 4.84-5.04 5.99-6.23c.12.7 1.25 7.06 1.25 7.06c.1.56.38 1.07.78 1.48c0 .01 7.7 9.07 7.7 9.07c.43.48 1.01.79 1.66.85c.65.05 1.27-.16 1.77-.57c.56-.47.85-1.17.85-1.85c0-.56-.18-1.1-.57-1.56z"></path></svg>
+    </div>
+  </button>
+    
     <nav>
      <ul class="menu-nav" id="menu-nav">
       <li>
@@ -3860,6 +4102,14 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
      <div class="adm-pmsg" id="adm-profile-msg"></div>
      <button class="adm-sbtn" onclick="saveAdminProfile()" style="width:100%;margin-top:4px">💾 Save Profile</button>
     </div>
+        <!-- COLOR CUSTOMIZE -->
+    <div class="adm-sec" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+     <div>
+      <div class="adm-sec-ttl" style="margin-bottom:4px">🎨 Color Customize</div>
+      <div style="font-size:10px;color:#4b5563;line-height:1.4">Globally customize site colors for all users</div>
+     </div>
+     <button onclick="openColorPanel()" title="Color Customize" style="width:44px;height:44px;border-radius:50%;background:conic-gradient(#f55 0%,#fa4 15%,#ff4 30%,#5f5 45%,#4fe 60%,#59f 75%,#b5f 88%,#f55 100%);border:none;cursor:pointer;flex-shrink:0;box-shadow:0 3px 14px rgba(0,0,0,.7);font-size:19px;display:flex;align-items:center;justify-content:center">🎨</button>
+    </div>
     <!-- LIVE TV URLS -->
     <div class="adm-sec">
      <div class="adm-sec-ttl">
@@ -4213,11 +4463,11 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
    </div>
   </div>
   <!-- Firebase CDN -->
-  <script src="js/firebase-app-compat.js">
+  <script src="../www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
   </script>
-  <script src="js/firebase-auth-compat.js">
+  <script src="../www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js">
   </script>
-  <script src="js/firebase-firestore-compat.js">
+  <script src="../www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js">
   </script>
   <script>
    // ── CONFIG ──────────────────────────────────────────────────────────────────
@@ -6796,12 +7046,147 @@ showSkeletons();
 loadAdminSettings().then(()=>loadTab(currentTab));
 openFromHash();
   </script>
-  <script data-referral-code="8vpiwoo9p9zc" data-repl-id="139ad110-93d4-4345-86e8-29d2550dd882" src="js/replit-pill.global.js">
-  </script>
-  <script data-referral-code="98dozji3ulpv" data-repl-id="83b1aead-877e-4974-9b0a-bbc8c2065ce4" src="js/replit-pill.global.js">
-  </script>
+  
+  
   <div id="replit-pill-host">
   </div>
- <script src="replit-cdn.com/replit-pill/replit-pill.global.js" data-referral-code="d5nt86znqe2a" data-repl-id="4da2acd0-aab1-4877-ab51-0c1b3f106b6c"></script>
+ 
 
-<script src="../replit-cdn.com/replit-pill/replit-pill.global.js" data-referral-code="uoavqy6gbli5" data-repl-id="02f49a30-c09b-40ca-90f1-6f2364b43475"></script></body></html>
+<script>
+(function(){
+  const btn=document.getElementById('logoBtn');
+  if(!btn)return;
+  const icons=['ldefault-icon','li2','li3','li4','li5','li6','li7'];
+  let idx=0;
+  btn.classList.add('lauto');
+  function showNext(){
+    btn.querySelectorAll('.licon').forEach(el=>el.classList.remove('lactive'));
+    const el=btn.querySelector('.'+icons[idx]);
+    if(el)el.classList.add('lactive');
+    idx=(idx+1)%icons.length;
+  }
+  showNext();
+  setInterval(showNext,2000);
+})();
+</script>
+
+  <!-- Color Customize Overlay -->
+  <div id="clr-overlay">
+   <div id="clr-box">
+    <div class="clr-hd">
+     <div><div class="clr-hd-title">🎨 Color Customize</div><div class="clr-hd-sub">Changes apply globally for all users in real-time</div></div>
+     <button class="clr-x" onclick="clrClose()">✕</button>
+    </div>
+    <div class="clr-body">
+
+     <!-- 1: Page Background — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Page Background</div><div class="clr-lbl-sub">Main site background</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_bg" style="background:#262626"></div><input type="color" id="ci-c_bg" value="#262626" oninput="clrPrev('c_bg',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_bg'])">Save</button>
+     </div>
+
+     <!-- 2: Header/Logo Gradient — 3 colors -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Header &amp; Logo Gradient</div><div class="clr-lbl-sub">Topbar · navbar · featured · logo button</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_grad_l" style="background:#262626"></div><input type="color" id="ci-c_grad_l" value="#262626" oninput="clrPrev('c_grad_l',this.value)"></div>
+       <span class="clr-sw-arrow">›</span>
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_grad_m" style="background:#ff0000"></div><input type="color" id="ci-c_grad_m" value="#ff0000" oninput="clrPrev('c_grad_m',this.value)"></div>
+       <span class="clr-sw-arrow">›</span>
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_grad_r" style="background:#262626"></div><input type="color" id="ci-c_grad_r" value="#262626" oninput="clrPrev('c_grad_r',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_grad_l','c_grad_m','c_grad_r'])">Save</button>
+     </div>
+
+     <!-- 3: Button Gradient — 2 colors -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Button Gradient</div><div class="clr-lbl-sub">Play · save · action buttons · badges</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_btn_1" style="background:#ff0000"></div><input type="color" id="ci-c_btn_1" value="#ff0000" oninput="clrPrev('c_btn_1',this.value)"></div>
+       <span class="clr-sw-arrow">›</span>
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_btn_2" style="background:#cc0000"></div><input type="color" id="ci-c_btn_2" value="#cc0000" oninput="clrPrev('c_btn_2',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_btn_1','c_btn_2'])">Save</button>
+     </div>
+
+     <!-- 4: Card Background — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Card Background</div><div class="clr-lbl-sub">Movie &amp; show card background</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_bg2" style="background:#181818"></div><input type="color" id="ci-c_bg2" value="#181818" oninput="clrPrev('c_bg2',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_bg2'])">Save</button>
+     </div>
+
+     <!-- 5: Nav Tab Background — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Nav Tab Background</div><div class="clr-lbl-sub">MOVIES · SHOWS · ANIME · LIVE buttons</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_nav" style="background:#262626"></div><input type="color" id="ci-c_nav" value="#262626" oninput="clrPrev('c_nav',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_nav'])">Save</button>
+     </div>
+
+     <!-- 6: Primary Text — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Primary Text</div><div class="clr-lbl-sub">Main headings &amp; section titles</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_text" style="background:#ffffff;border:1px solid rgba(255,255,255,.2)"></div><input type="color" id="ci-c_text" value="#ffffff" oninput="clrPrev('c_text',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_text'])">Save</button>
+     </div>
+
+     <!-- 7: Card Title — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Card Title Text</div><div class="clr-lbl-sub">Movie &amp; show card title color</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_text2" style="background:#eeeeee"></div><input type="color" id="ci-c_text2" value="#eeeeee" oninput="clrPrev('c_text2',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_text2'])">Save</button>
+     </div>
+
+     <!-- 8: Muted Text — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Muted / Meta Text</div><div class="clr-lbl-sub">Year, genre, meta info</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_text3" style="background:#888888"></div><input type="color" id="ci-c_text3" value="#888888" oninput="clrPrev('c_text3',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_text3'])">Save</button>
+     </div>
+
+     <!-- 9: Rating Color — 1 color -->
+     <div class="clr-item">
+      <div class="clr-lbl"><div class="clr-lbl-main">Rating &amp; Star Color</div><div class="clr-lbl-sub">IMDb star &amp; rating badge</div></div>
+      <div class="clr-swatches">
+       <div class="clr-sw"><div class="clr-sw-bg" id="swb-c_rating" style="background:#f5c518"></div><input type="color" id="ci-c_rating" value="#f5c518" oninput="clrPrev('c_rating',this.value)"></div>
+      </div>
+      <button class="clr-sb" onclick="clrSaveGroup(['c_rating'])">Save</button>
+     </div>
+
+    </div>
+    <div class="clr-foot">
+     <button class="clr-reset" onclick="clrResetAll()">🔄 Reset All to Default</button>
+     <button class="clr-lk-btn is-unlocked" id="clr-lk-btn" onclick="clrLockOpen()">
+      <span id="clr-lk-icon">🔓</span>
+      <span id="clr-lk-txt">Unlocked — Click to Lock</span>
+     </button>
+    </div>
+   </div>
+  </div>
+  <!-- Lock Code Popup -->
+  <div id="clr-code-pop">
+   <div class="clr-cb">
+    <h3 id="clr-cp-title">🔒 Enter Code</h3>
+    <p id="clr-cp-desc">Enter your 5-digit code to lock or unlock color customization.</p>
+    <input class="clr-code-inp" id="clr-code-inp" type="password" maxlength="5" placeholder="•••••" inputmode="numeric" onkeydown="if(event.key==='Enter')clrCodeOk()">
+    <div class="clr-code-msg" id="clr-code-msg"></div>
+    <button class="clr-code-ok" onclick="clrCodeOk()">Confirm</button>
+    <button class="clr-code-cancel" onclick="clrCodeCancel()">Cancel</button>
+   </div>
+  </div>
+  <div id="clr-toast"></div>
+
+<script src="../replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="70cb143b-11dd-4edb-ad3e-2c8d68c17835"></script></body></html>
