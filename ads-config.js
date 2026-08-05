@@ -15,20 +15,20 @@
       name: 'Ads Timer',
       status: 'on',
       activeMinutes: 10,
-      repeatEveryHours: 12
+      repeatEveryHours: 1
     },
 
     directLink: {
       name: 'Direct link',
       status: 'on',
       duration: 'unlimited',
-      url: 'https://example.com/'
+      url: 'https://www.effectivecpmnetwork.com/df5sd70j?key=a02eae7a3b3ae1ae3075611a045be956'
     },
 
     nativeBanner: {
       name: 'Native Banner',
       status: 'on',
-      duration: 'unlimited',
+      duration: '#',
       scriptSrc: 'https://pl30706913.effectivecpmnetwork.com/022365bfc231eeca69e2e1541fc25098/invoke.js',
       containerId: 'container-022365bfc231eeca69e2e1541fc25098'
     },
@@ -36,14 +36,14 @@
     popunder: {
       name: 'Popunder',
       status: 'on',
-      duration: 'unlimited',
+      duration: '#',
       scriptSrc: 'https://pl30706911.effectivecpmnetwork.com/09/68/6b/09686b86c2744d20c2ae98b69615b5cd.js'
     },
 
     socialBar: {
       name: 'Social Bar',
       status: 'on',
-      duration: 'unlimited',
+      duration: '#',
       scriptSrc: 'https://pl30706912.effectivecpmnetwork.com/5b/8b/4a/5b8b4a34456001f4d0922fa068070fce.js'
     },
 
