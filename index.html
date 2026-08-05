@@ -1,6 +1,8 @@
 <!DOCTYPE html><html lang="en"><head>
   <script src="ads-config.js"></script>
   <script src="website-config.js"></script>
+  <script src="api-config.js"></script>
+  <script src="admin-config.js"></script>
   <script src="website-colors.js"></script>
 
 
@@ -192,8 +194,9 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .gtc-ad-slot{width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .gtc-banner-slot{min-height:90px;padding:10px 16px;background:#060a12;border-bottom:1px solid #1e293b}
 .gtc-banner-slot iframe{display:block;max-width:100%;border:0}
-.gtc-native-slot{padding:10px 28px 24px;background:#0b0f1a}
-.gtc-native-ad-container{width:100%;max-width:728px;min-height:0}
+.gtc-native-slot{width:100%;max-width:100%;padding:10px 28px 24px;background:#0b0f1a;flex-direction:column;align-items:center;overflow:hidden}
+.gtc-native-ad-container{display:block;width:100%;max-width:728px;min-height:0;margin:0 auto;overflow:hidden}
+.gtc-native-ad-container iframe,.gtc-native-ad-container img,.gtc-native-ad-container video{display:block;max-width:100%;height:auto}
 .dv-placeholder-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3}
 .dv-placeholder-inner{position:relative;z-index:2}
 .dv-play-circle{width:64px;height:64px;border-radius:50%;background:rgba(255,0,0,.2);border:2px solid rgba(255,0,0,.5);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
@@ -274,7 +277,7 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .person-works{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;padding:14px 20px 40px}
 /* RESPONSIVE */
 @media(max-width:900px){.posts-grid{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:600px){.posts-grid{grid-template-columns:repeat(3,1fr)}.break-text{display:none}.ads-timer-badge{min-width:54px;padding:3px 4px;font-size:7px;letter-spacing:.15px}.ticker-wrap{padding-left:4px;padding-right:6px}.ticker-item{gap:6px}.header-wrapper{display:flex;flex-direction:column;align-items:center;height:auto;padding:14px 16px;gap:10px}.logo-text{height:auto;width:100%;justify-content:center}.menu-nav{height:auto;justify-content:center;flex-wrap:nowrap;gap:4px;overflow:visible}.menu-nav li{flex-shrink:0}.menu-nav li a{padding:.4em .75em;font-size:10px;white-space:nowrap}#header-search{width:100%;justify-content:center}.search-box{width:100%}.search-input{width:100%;max-width:100%;padding:0 80px 0 14px}.search-input:focus{width:100%}}
+@media(max-width:600px){.posts-grid{grid-template-columns:repeat(3,1fr)}.break-text{display:none}.ads-timer-badge{min-width:54px;padding:3px 4px;font-size:7px;letter-spacing:.15px}.ticker-wrap{padding-left:4px;padding-right:6px}.ticker-item{gap:6px}.header-wrapper{display:flex;flex-direction:column;align-items:center;height:auto;padding:14px 16px;gap:10px}.logo-text{height:auto;width:100%;justify-content:center}.menu-nav{height:auto;justify-content:center;flex-wrap:nowrap;gap:4px;overflow:visible}.menu-nav li{flex-shrink:0}.menu-nav li a{padding:.4em .75em;font-size:10px;white-space:nowrap}#header-search{width:100%;justify-content:center}.search-box{width:100%}.search-input{width:100%;max-width:100%;padding:0 80px 0 14px}.search-input:focus{width:100%}.gtc-native-slot{padding:10px 8px 20px}.gtc-native-ad-container{width:100%;max-width:100%}}
 @media(max-width:400px){.posts-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.dv-action-row{gap:4px;flex-wrap:nowrap}.dv-btn{padding:5px 9px;font-size:10px;gap:3px;letter-spacing:0}.btn-share{width:28px;height:28px}.dv-btn svg{flex-shrink:0}}
 .cast-no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#1e293b}
@@ -4009,9 +4012,9 @@ html{background:var(--c-bg)!important}
     </div>
     <!-- PROFILE -->
     <div class="adm-sec">
-     <div class="adm-sec-ttl">👤 My Profile</div>
+     <div class="adm-sec-ttl">👤 Admin Profile <span style="font-size:10px;color:#64748b;font-weight:400">Edit admin-config.js to change</span></div>
      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:12px">
-      <div class="adm-profile-avatar-wrap" id="adm-profile-avatar-wrap" onclick="document.getElementById('adm-photo-input').click()" title="Click to change photo">
+      <div class="adm-profile-avatar-wrap" id="adm-profile-avatar-wrap" title="Edit admin-config.js to change photo">
        <div class="adm-profile-avatar-default" id="adm-profile-avatar-default" style="display:flex">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>
        </div>
@@ -4022,16 +4025,16 @@ html{background:var(--c-bg)!important}
       <div style="flex:1">
        <div class="adm-lbl">Display Name</div>
        <div class="adm-field">
-        <input class="adm-inp" id="adm-profile-name" placeholder="Your name">
+        <input class="adm-inp" id="adm-profile-name" placeholder="Your name" readonly>
        </div>
       </div>
      </div>
      <div class="adm-row">
       <div class="adm-lbl">Bio</div>
-      <textarea class="adm-inp" id="adm-profile-bio" placeholder="Short bio..." style="resize:none;min-height:56px;padding:9px 12px;width:100%" rows="2"></textarea>
+      <textarea class="adm-inp" id="adm-profile-bio" placeholder="Short bio..." style="resize:none;min-height:56px;padding:9px 12px;width:100%" rows="2" readonly></textarea>
      </div>
      <div class="adm-pmsg" id="adm-profile-msg"></div>
-     <button class="adm-sbtn" onclick="saveAdminProfile()" style="width:100%;margin-top:4px">💾 Save Profile</button>
+    <div style="font-size:10px;color:#64748b;line-height:1.5;margin-top:5px">Name, profile image, and about text are loaded from <code>admin-config.js</code>, not Firebase.</div>
     </div>
     <!-- LIVE TV URLS -->
     <div class="adm-sec">
@@ -4380,8 +4383,8 @@ html{background:var(--c-bg)!important}
     </h2>
     <div class="cast-grid" id="cast-grid">
     </div>
-    <div class="gtc-ad-slot gtc-native-slot" id="gtc-native-ad-slot" aria-label="Advertisement">
-    </div>
+  </div>
+  <div class="gtc-ad-slot gtc-native-slot" id="gtc-native-ad-slot" aria-label="Advertisement">
    </div>
   </div>
   <!-- PERSON VIEW -->
@@ -4412,9 +4415,13 @@ html{background:var(--c-bg)!important}
   </script>
   <script>
    // ── CONFIG ──────────────────────────────────────────────────────────────────
-const TMDB_KEY = '9d0f10dd934f1c2a6e91954041550593';
-const ADMIN_EMAIL = 'rizviyankhan@gmail.com';
-const IMG = 'https://image.tmdb.org/t/p';
+const API_CONFIG = window.GTC_API_CONFIG || {};
+const ADMIN_CONFIG = window.GTC_ADMIN_CONFIG || {adminEmails:[],profile:{}};
+const TMDB_KEY = API_CONFIG.tmdb?.apiKey || '';
+const TMDB_BASE_URL = API_CONFIG.tmdb?.apiBaseUrl || 'https://api.themoviedb.org/3';
+const ANILIST_URL = API_CONFIG.anilist?.apiUrl || 'https://graphql.anilist.co';
+const ANILIST_DEFAULT_ID = Number(API_CONFIG.anilist?.animeId || 0);
+const IMG = API_CONFIG.tmdb?.imageBaseUrl || 'https://image.tmdb.org/t/p';
 const PH = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="300"%3E%3Crect width="200" height="300" fill="%231a1a2e"/%3E%3Ctext x="100" y="155" text-anchor="middle" fill="%23666" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
 const AVPH = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="185" height="278"%3E%3Crect width="185" height="278" fill="%231e293b"/%3E%3Ccircle cx="92" cy="90" r="38" fill="%23334155"/%3E%3Cellipse cx="92" cy="210" rx="60" ry="50" fill="%23334155"/%3E%3C/svg%3E';
 
@@ -4460,14 +4467,7 @@ const MOVIE_GENRES = [{v:'28',l:'Action'},{v:'12',l:'Adventure'},{v:'16',l:'Anim
 const TV_GENRES = [{v:'10759',l:'Action & Adventure'},{v:'16',l:'Animation'},{v:'35',l:'Comedy'},{v:'80',l:'Crime'},{v:'18',l:'Drama'},{v:'14',l:'Fantasy'},{v:'27',l:'Horror'},{v:'10749',l:'Romance'},{v:'10765',l:'Sci-Fi & Fantasy'},{v:'9648',l:'Mystery'}];
 
 // ── FIREBASE ─────────────────────────────────────────────────────────────────
-firebase.initializeApp({
-  apiKey:'AIzaSyBcR8zJrTkstjda22JEdVTaJ3FROmREdLA',
-  authDomain:'cinemabazar-600b0.firebaseapp.com',
-  projectId:'cinemabazar-600b0',
-  storageBucket:'cinemabazar-600b0.firebasestorage.app',
-  messagingSenderId:'62690080088',
-  appId:'1:62690080088:web:f4e7042fb4ad8248cce12d'
-});
+firebase.initializeApp(API_CONFIG.firebase || {});
 const fbAuth = firebase.auth();
 const fbDb = firebase.firestore();
 
@@ -4519,7 +4519,7 @@ function normalizeEmbed(raw){
 }
 
 async function tmdb(ep,params={}){
-  const u=new URL(`https://api.themoviedb.org/3${ep}`);
+  const u=new URL(`${TMDB_BASE_URL}${ep}`);
   u.searchParams.set('api_key',TMDB_KEY);
   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v)));
   const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json();
@@ -4527,10 +4527,18 @@ async function tmdb(ep,params={}){
 
 // ── ANILIST API ───────────────────────────────────────────────────────────────
 const ANILIST_Q=`query($page:Int,$perPage:Int,$sort:[MediaSort]){Page(page:$page,perPage:$perPage){pageInfo{hasNextPage}media(type:ANIME,sort:$sort,isAdult:false){id idMal title{romaji english}coverImage{large}averageScore startDate{year month day}format description(asHtml:false)episodes}}}`;
+const ANILIST_ID_Q=`query($id:Int){Media(id:$id,type:ANIME){id idMal title{romaji english}coverImage{large}averageScore startDate{year month day}format description(asHtml:false)episodes}}`;
 async function fetchAniList(variables){
-  const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query:ANILIST_Q,variables})});
+  const r=await fetch(ANILIST_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query:ANILIST_Q,variables})});
   if(!r.ok)throw new Error(r.status);
   const d=await r.json();return d.data?.Page?.media||[];
+}
+async function fetchAniListById(id){
+  const numericId=Number(id);
+  if(!numericId)return null;
+  const r=await fetch(ANILIST_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query:ANILIST_ID_Q,variables:{id:numericId}})});
+  if(!r.ok)throw new Error(r.status);
+  const d=await r.json();return d.data?.Media||null;
 }
 function anilistToItem(m){
   const isMovie=m.format==='MOVIE';
@@ -4548,12 +4556,18 @@ function anilistToItem(m){
 // ── FIREBASE AUTH ─────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user=>{
   currentUser=user;
-  isAdmin=!!(user&&user.email===ADMIN_EMAIL);
+  const adminEmails=(ADMIN_CONFIG.adminEmails||[]).map(email=>String(email).trim().toLowerCase());
+  isAdmin=!!(user&&adminEmails.includes(String(user.email||'').trim().toLowerCase()));
   if(user){
-    loadUserProfile(user.uid).then(data=>{
-      window._profilePhotoUrl=data.photoUrl||user.photoURL||'';
+    if(isAdmin){
+      window._profilePhotoUrl='';
       updateAuthUI();
-    });
+    }else{
+      loadUserProfile(user.uid).then(data=>{
+        window._profilePhotoUrl=data.photoUrl||user.photoURL||'';
+        updateAuthUI();
+      });
+    }
   } else {
     window._profilePhotoUrl='';
     updateAuthUI();
@@ -4566,11 +4580,12 @@ function updateAuthUI(){
   btn.classList.toggle('admin-on',isAdmin);
   btn.style.overflow='hidden';btn.style.padding='0';
   if(currentUser){
-    const photo=window._profilePhotoUrl||currentUser.photoURL||'';
+    const adminProfile=ADMIN_CONFIG.profile||{};
+    const photo=isAdmin ? String(adminProfile.imageUrl||'').trim() : (window._profilePhotoUrl||currentUser.photoURL||'');
     if(photo){
       btn.innerHTML=`<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;display:block" alt="">`;
     } else {
-      const init=(currentUser.displayName||currentUser.email||'U').charAt(0).toUpperCase();
+      const init=(isAdmin ? adminProfile.name : (currentUser.displayName||currentUser.email||'U')).charAt(0).toUpperCase();
       btn.innerHTML=`<span style="font-size:14px;font-weight:800;color:#fff">${init}</span>`;
     }
     btn.title=isAdmin?'Admin Panel':'My Account';
@@ -4648,10 +4663,16 @@ function showUserPanel(){
   $('auth-form-wrap').style.display='none';$('auth-user-panel').style.display='';
   $('auth-user-role').innerHTML=isAdmin?'&#x2713; Admin':'&#x25CF; Member';
   $('auth-user-role').style.color=isAdmin?'#22c55e':'#60a5fa';
-  $('auth-user-name').textContent=currentUser.displayName||(currentUser.email||'').split('@')[0];
+  const adminProfile=ADMIN_CONFIG.profile||{};
+  $('auth-user-name').textContent=isAdmin ? (adminProfile.name||'Admin') : (currentUser.displayName||(currentUser.email||'').split('@')[0]);
   $('auth-user-email').textContent=currentUser.email||'';
-  $('profile-name-input').value=currentUser.displayName||'';
+  $('profile-name-input').value=isAdmin ? (adminProfile.name||'') : (currentUser.displayName||'');
   $('profile-save-msg').textContent='';$('profile-upload-msg').textContent='';
+  if(isAdmin){
+    $('auth-user-bio').textContent=adminProfile.about||'';
+    $('profile-bio-input').value=adminProfile.about||'';
+    return;
+  }
   loadUserProfile(currentUser.uid).then(data=>{
     const photo=data.photoUrl||currentUser.photoURL||'';
     window._profilePhotoUrl=photo;
@@ -4702,10 +4723,11 @@ async function handleAuthSubmit(){
 }
 
 // ── IMGBB & PROFILE ──────────────────────────────────────────────────────────
-const IMGBB_KEY='9cf974acba9d5d5d715bf14db07d697a';
+const IMGBB_KEY=API_CONFIG.imgbb?.apiKey||'';
+const IMGBB_UPLOAD_URL=API_CONFIG.imgbb?.uploadUrl||'https://api.imgbb.com/1/upload';
 async function imgbbUpload(file){
   const fd=new FormData();fd.append('image',file);
-  const r=await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`,{method:'POST',body:fd});
+  const r=await fetch(`${IMGBB_UPLOAD_URL}?key=${IMGBB_KEY}`,{method:'POST',body:fd});
   if(!r.ok)throw new Error('Upload failed ('+r.status+')');
   const d=await r.json();
   if(!d.success)throw new Error(d.error?.message||'Upload failed');
@@ -4751,6 +4773,10 @@ document.getElementById('signup-photo-input').addEventListener('change',function
 
 // Save user profile
 async function saveUserProfile(){
+  if(isAdmin){
+    $('profile-save-msg').textContent='Edit admin-config.js to change the admin profile.';
+    return;
+  }
   const btn=$('profile-save-btn');
   const name=$('profile-name-input').value.trim();
   const bio=$('profile-bio-input').value.trim();
@@ -4768,36 +4794,17 @@ async function saveUserProfile(){
 }
 document.getElementById('profile-save-btn').addEventListener('click',saveUserProfile);
 
-// Admin photo upload
+// Admin profile is controlled by admin-config.js, not Firebase.
 document.getElementById('adm-photo-input').addEventListener('change',async function(){
-  const file=this.files[0];if(!file)return;
-  $('adm-profile-msg').textContent='Uploading photo...';$('adm-profile-msg').className='adm-pmsg';
-  try{
-    const url=await imgbbUpload(file);
-    $('adm-profile-avatar-photo').src=url;$('adm-profile-avatar-photo').style.display='block';
-    $('adm-profile-avatar-default').style.display='none';
-    window._profilePhotoUrl=url;
-    await saveProfileToFirestore(currentUser.uid,{photoUrl:url});
-    await currentUser.updateProfile({photoURL:url}).catch(()=>{});
-    updateAuthUI();
-    $('adm-profile-msg').textContent='\u2713 Photo updated!';
-    setTimeout(()=>{$('adm-profile-msg').textContent=''},2500);
-  }catch(e){$('adm-profile-msg').textContent='Upload failed: '+e.message;$('adm-profile-msg').className='adm-pmsg err';}
+  $('adm-profile-msg').textContent='Edit admin-config.js to change the admin image.';
+  $('adm-profile-msg').className='adm-pmsg';
   this.value='';
 });
 
-// Save admin profile
+// Admin profile is read-only in the browser; edit admin-config.js to change it.
 async function saveAdminProfile(){
-  const name=$('adm-profile-name').value.trim();
-  const bio=$('adm-profile-bio').value.trim();
-  $('adm-profile-msg').textContent='Saving...';$('adm-profile-msg').className='adm-pmsg';
-  try{
-    if(name)await currentUser.updateProfile({displayName:name}).catch(()=>{});
-    await saveProfileToFirestore(currentUser.uid,{bio,displayName:name||currentUser.displayName||''});
-    updateAuthUI();
-    $('adm-profile-msg').textContent='\u2713 Profile saved!';
-    setTimeout(()=>{$('adm-profile-msg').textContent=''},2500);
-  }catch(e){$('adm-profile-msg').textContent='Error: '+e.message;$('adm-profile-msg').className='adm-pmsg err';}
+  $('adm-profile-msg').textContent='Edit admin-config.js to change the admin profile.';
+  $('adm-profile-msg').className='adm-pmsg';
 }
 
 // ── FIRESTORE URLs ────────────────────────────────────────────────────────────
@@ -4861,7 +4868,17 @@ async function fetchPage(type,page){
   const alSort=sortMap[page]||['POPULARITY_DESC'];
   const alPage=page>3?page-2:1;
   const results=await fetchAniList({page:alPage,perPage:30,sort:alSort});
-  return results.map(anilistToItem);
+  const items=results.map(anilistToItem);
+  if(page===1&&ANILIST_DEFAULT_ID){
+    try{
+      const featured=await fetchAniListById(ANILIST_DEFAULT_ID);
+      if(featured){
+        const featuredItem=anilistToItem(featured);
+        return [featuredItem,...items.filter(item=>item.id!==featuredItem.id)];
+      }
+    }catch(ex){}
+  }
+  return items;
 }
 
 function getCached(t){return cache[t]||{items:[],lastPage:0}}
@@ -6444,7 +6461,7 @@ async function openDetail(item){
           if(item.contentType==='anime'){
             // Reference: direct AniList fetch for anime detail (genres, episodes, trailer, cast)
             const aniQ=`query($id:Int){Media(id:$id,type:ANIME){id title{romaji english}coverImage{extraLarge large}episodes averageScore description(asHtml:false)startDate{year}genres studios{nodes{name}}trailer{id site}characters(role:MAIN,sort:ID,page:1,perPage:12){edges{node{id name{full}image{large}}role}}}}`;
-            const aniRes=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:aniQ,variables:{id:parseInt(item.id)}})}).catch(()=>null);
+            const aniRes=await fetch(ANILIST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:aniQ,variables:{id:parseInt(item.id)}})}).catch(()=>null);
             const aniData=aniRes?await aniRes.json().catch(()=>({})):{};
             const media=aniData?.data?.Media;
             if(media){
@@ -6722,7 +6739,7 @@ async function openFromHash(){
     var item;
     if(type==='anime'){
       var q='query($id:Int){Media(id:$id,type:ANIME){id title{romaji english}coverImage{extraLarge large}averageScore startDate{year month day}format description(asHtml:false)}}';
-      var r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:{id:id}})});
+      var r=await fetch(ANILIST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:{id:id}})});
       var d=await r.json();
       var m=d&&d.data&&d.data.Media;
       if(!m)return;
@@ -6831,21 +6848,19 @@ async function openAdminPanel(){
   // Show panel immediately with cached values
   $('adm-overlay').classList.add('show');renderLTOrder();
   setAdmMsg('adm-lt-msg','⏳ Loading...');
-  // Load admin profile
-  if(currentUser){
-    $('adm-profile-name').value=currentUser.displayName||'';
-    $('adm-profile-msg').textContent='';
-    loadUserProfile(currentUser.uid).then(data=>{
-      const photo=data.photoUrl||currentUser.photoURL||'';
-      if(photo){
-        $('adm-profile-avatar-photo').src=photo;$('adm-profile-avatar-photo').style.display='block';
-        $('adm-profile-avatar-default').style.display='none';
-      } else {
-        $('adm-profile-avatar-photo').style.display='none';$('adm-profile-avatar-default').style.display='flex';
-      }
-      $('adm-profile-name').value=data.displayName||currentUser.displayName||'';
-      $('adm-profile-bio').value=data.bio||'';
-    });
+  // Admin profile is always loaded from admin-config.js, never Firebase.
+  const adminProfile=ADMIN_CONFIG.profile||{};
+  const adminImage=String(adminProfile.imageUrl||'').trim();
+  $('adm-profile-name').value=adminProfile.name||'';
+  $('adm-profile-bio').value=adminProfile.about||'';
+  $('adm-profile-msg').textContent='';
+  if(adminImage){
+    $('adm-profile-avatar-photo').src=adminImage;
+    $('adm-profile-avatar-photo').style.display='block';
+    $('adm-profile-avatar-default').style.display='none';
+  }else{
+    $('adm-profile-avatar-photo').style.display='none';
+    $('adm-profile-avatar-default').style.display='flex';
   }
 
   // Re-fetch latest from Firestore so admin always sees current saved values

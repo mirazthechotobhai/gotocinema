@@ -3,8 +3,8 @@
  *
  * Change only status: "on" or status: "off" below.
  * For each ad, use duration: "unlimited" to always run, or duration: "#"
- * to follow the shared timer. The timer defaults to 10 active minutes,
- * then starts again after the configured number of hours.
+ * to follow the shared timer. This export is currently in unlimited test
+ * mode so every configured ad can be checked on every device.
  * The website does not need to be edited when changing these settings.
  */
 (function (window, document) {
@@ -28,7 +28,7 @@
     nativeBanner: {
       name: 'Native Banner',
       status: 'on',
-      duration: '#',
+      duration: 'unlimited',
       scriptSrc: 'https://pl30706913.effectivecpmnetwork.com/022365bfc231eeca69e2e1541fc25098/invoke.js',
       containerId: 'container-022365bfc231eeca69e2e1541fc25098'
     },
@@ -36,21 +36,21 @@
     popunder: {
       name: 'Popunder',
       status: 'on',
-      duration: '#',
+      duration: 'unlimited',
       scriptSrc: 'https://pl30706911.effectivecpmnetwork.com/09/68/6b/09686b86c2744d20c2ae98b69615b5cd.js'
     },
 
     socialBar: {
       name: 'Social Bar',
       status: 'on',
-      duration: '#',
+      duration: 'unlimited',
       scriptSrc: 'https://pl30706912.effectivecpmnetwork.com/5b/8b/4a/5b8b4a34456001f4d0922fa068070fce.js'
     },
 
     banner728x90: {
       name: 'Banner 728x90',
       status: 'on',
-      duration: '#',
+      duration: 'unlimited',
       key: 'ddcb57682287c3bc03a188bbb32523b8',
       scriptSrc: 'https://www.highperformanceformat.com/ddcb57682287c3bc03a188bbb32523b8/invoke.js'
     }
@@ -171,16 +171,16 @@
     slot.style.display = isOn('nativeBanner') ? 'flex' : 'none';
     if (!isOn('nativeBanner')) return;
 
-    var container = document.createElement('div');
-    container.id = config.containerId;
-    container.className = 'gtc-native-ad-container';
-    slot.appendChild(container);
     var script = document.createElement('script');
     script.src = config.scriptSrc;
     script.async = true;
     script.setAttribute('data-cfasync', 'false');
     script.dataset.gtcDetailAd = 'nativeBanner';
     slot.appendChild(script);
+    var container = document.createElement('div');
+    container.id = config.containerId;
+    container.className = 'gtc-native-ad-container';
+    slot.appendChild(container);
   }
 
   function render728x90Banner() {
@@ -218,9 +218,11 @@
   function syncAdsState() {
     var state = getTimerState();
     updateTimerUI();
-    if (lastTimerActive !== state.active) {
+    var shouldLoadGlobalAds = isOn('popunder') || isOn('socialBar');
+    if (lastTimerActive !== state.active || syncAdsState.lastGlobalAds !== shouldLoadGlobalAds) {
       lastTimerActive = state.active;
-      if (state.active) loadGlobalAds();
+      syncAdsState.lastGlobalAds = shouldLoadGlobalAds;
+      if (shouldLoadGlobalAds) loadGlobalAds();
       else removeGlobalAds();
       if (document.getElementById('detail-view')) window.GTC_ADS.renderDetailAds();
     }
