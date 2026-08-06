@@ -8,7 +8,7 @@
   'use strict';
 
   window.GTC_SOCIAL_MEDIA_CONFIG = {
-    facebook: 'www.facebook.com',
+    facebook: 'https://www.facebook.com/',
     youtube: 'www.youtube.com',
     telegram: 'https://web.telegram.org',
     instagram: 'https://www.instagram.com'
