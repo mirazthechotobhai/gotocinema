@@ -11,6 +11,6 @@
     facebook: 'https://www.facebook.com/',
     youtube: 'https://www.youtube.com/',
     telegram: 'https://web.telegram.org/',
-    instagram: '#'
+    instagram: 'https://www.instagram.com/'
   };
 })(window);
