@@ -36,14 +36,14 @@
     popunder: {
       name: 'Popunder',
       status: 'on',
-      duration: 'unlimited',
+      duration: '#',
       scriptSrc: 'https://pl30706911.effectivecpmnetwork.com/09/68/6b/09686b86c2744d20c2ae98b69615b5cd.js'
     },
 
     socialBar: {
       name: 'Social Bar',
       status: 'on',
-      duration: 'unlimited',
+      duration: '#',
       scriptSrc: 'https://pl30706912.effectivecpmnetwork.com/5b/8b/4a/5b8b4a34456001f4d0922fa068070fce.js'
     },
 
