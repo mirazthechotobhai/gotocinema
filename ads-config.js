@@ -15,14 +15,14 @@
       name: 'Ads Timer',
       status: 'on',
       activeMinutes: 10,
-      repeatEveryHours: 12
+      repeatEveryHours: 1
     },
 
     directLink: {
       name: 'Direct link',
       status: 'on',
       duration: 'unlimited',
-      url: 'https://example.com/'
+      url: 'https://www.effectivecpmnetwork.com/df5sd70j?key=a02eae7a3b3ae1ae3075611a045be956'
     },
 
     nativeBanner: {
