@@ -15,7 +15,7 @@
       name: 'Ads Timer',
       status: 'on',
       activeMinutes: 10,
-      repeatEveryHours: 1
+      repeatEveryHours: 01
     },
 
     directLink: {
