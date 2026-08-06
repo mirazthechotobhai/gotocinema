@@ -9,7 +9,7 @@
 
   window.GTC_SOCIAL_MEDIA_CONFIG = {
     facebook: 'https://www.facebook.com/',
-    youtube: 'www.youtube.com',
+    youtube: 'https://www.youtube.com/',.
     telegram: 'https://web.telegram.org',
     instagram: 'https://www.instagram.com'
   };
