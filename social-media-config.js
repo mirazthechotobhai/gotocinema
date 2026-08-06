@@ -9,8 +9,8 @@
 
   window.GTC_SOCIAL_MEDIA_CONFIG = {
     facebook: 'https://www.facebook.com/',
-    youtube: 'https://www.youtube.com/',.
-    telegram: 'https://web.telegram.org',
-    instagram: 'https://www.instagram.com'
+    youtube: '#',
+    telegram: '#',
+    instagram: '#'
   };
 })(window);
