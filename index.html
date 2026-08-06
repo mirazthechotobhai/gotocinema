@@ -3,6 +3,7 @@
   <script src="website-config.js"></script>
   <script src="api-config.js"></script>
   <script src="admin-config.js"></script>
+  <script src="social-media-config.js"></script>
   <script src="website-colors.js"></script>
 
 
@@ -481,30 +482,6 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .adm-pmsg{font-size:11px;margin-top:8px;min-height:16px;color:#4ade80;font-weight:600}
 .adm-pmsg.err{color:#f87171}
 
-/* ── SOCIAL ICON CARDS ── */
-.adm-si-card{
-  background:rgba(255,255,255,.025);
-  border:1px solid rgba(255,255,255,.07);
-  border-radius:13px;padding:14px 15px;margin-bottom:9px;
-  transition:border-color .2s,background .2s;
-}
-.adm-si-card:last-of-type{margin-bottom:0}
-.adm-si-card:hover{border-color:rgba(99,102,241,.22);background:rgba(99,102,241,.03)}
-.adm-si-card-hd{display:flex;align-items:center;gap:9px;margin-bottom:12px}
-.adm-si-badge{
-  width:30px;height:30px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;flex-shrink:0;
-  border:1px solid rgba(255,255,255,.08);
-}
-.adm-si-name{font-size:12.5px;font-weight:700;color:#cbd5e1;letter-spacing:-.1px}
-.adm-si-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.adm-si-row:last-of-type{margin-bottom:0}
-.adm-si-row-lbl{
-  font-size:9.5px;font-weight:700;color:#374151;
-  width:36px;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px;
-}
-
 /* ── SIGN OUT ── */
 .adm-signout-btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
@@ -720,25 +697,25 @@ html{background:var(--c-bg)!important}
      </div>
     </div>
     <div class="social-icons">
-     <a href="index.html" id="si-fb" title="Facebook">
+     <a href="#" id="si-fb" title="Facebook" target="_blank" rel="noopener noreferrer">
       <svg fill="currentColor" height="14" viewBox="0 0 24 24" width="14">
        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z">
        </path>
       </svg>
      </a>
-     <a href="index.html" id="si-yt" title="YouTube">
+     <a href="#" id="si-yt" title="YouTube" target="_blank" rel="noopener noreferrer">
       <svg fill="currentColor" height="15" viewBox="0 0 24 24" width="15">
        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z">
        </path>
       </svg>
      </a>
-     <a href="index.html" id="si-tg" title="Telegram">
+     <a href="#" id="si-tg" title="Telegram" target="_blank" rel="noopener noreferrer">
       <svg fill="currentColor" height="14" viewBox="0 0 24 24" width="14">
        <path d="M21.8 2.15a1 1 0 0 0-1.08-.15L2.27 9.6a1 1 0 0 0 .08 1.86l4.07 1.36 1.86 5.58a1 1 0 0 0 1.7.38l2.34-2.34 4.15 3.05a1 1 0 0 0 1.55-.63l3-15a1 1 0 0 0-.22-.71z">
        </path>
       </svg>
      </a>
-     <a href="index.html" id="si-ig" title="Instagram">
+     <a href="#" id="si-ig" title="Instagram" target="_blank" rel="noopener noreferrer">
       <svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14">
        <rect height="20" rx="5" ry="5" width="20" x="2" y="2">
        </rect>
@@ -4141,116 +4118,6 @@ html{background:var(--c-bg)!important}
       + Add Anime Player
      </button>
     </div>
-    <!-- SOCIAL ICONS -->
-    <div class="adm-sec">
-     <div class="adm-sec-ttl">
-      🔗 Social Icons
-     </div>
-     <div id="adm-si-fields">
-      <div class="adm-si-card">
-       <div class="adm-si-card-hd">
-        <div class="adm-si-badge" style="background:rgba(24,119,242,.18)">
-         📘
-        </div>
-        <div class="adm-si-name">
-         Facebook
-        </div>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Link
-        </div>
-        <input class="adm-inp" id="adm-si-fb-url" placeholder="https://facebook.com/...">
-        <button class="adm-sbtn" onclick="admSaveSI('fb')">
-         Save
-        </button>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Logo
-        </div>
-        <input class="adm-inp" id="adm-si-fb-logo" placeholder="Image URL (optional)">
-       </div>
-      </div>
-      <div class="adm-si-card">
-       <div class="adm-si-card-hd">
-        <div class="adm-si-badge" style="background:rgba(255,0,0,.18)">
-         ▶️
-        </div>
-        <div class="adm-si-name">
-         YouTube
-        </div>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Link
-        </div>
-        <input class="adm-inp" id="adm-si-yt-url" placeholder="https://youtube.com/...">
-        <button class="adm-sbtn" onclick="admSaveSI('yt')">
-         Save
-        </button>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Logo
-        </div>
-        <input class="adm-inp" id="adm-si-yt-logo" placeholder="Image URL (optional)">
-       </div>
-      </div>
-      <div class="adm-si-card">
-       <div class="adm-si-card-hd">
-        <div class="adm-si-badge" style="background:rgba(0,136,204,.18)">
-         ✈️
-        </div>
-        <div class="adm-si-name">
-         Telegram
-        </div>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Link
-        </div>
-        <input class="adm-inp" id="adm-si-tg-url" placeholder="https://t.me/...">
-        <button class="adm-sbtn" onclick="admSaveSI('tg')">
-         Save
-        </button>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Logo
-        </div>
-        <input class="adm-inp" id="adm-si-tg-logo" placeholder="Image URL (optional)">
-       </div>
-      </div>
-      <div class="adm-si-card">
-       <div class="adm-si-card-hd">
-        <div class="adm-si-badge" style="background:rgba(225,48,108,.18)">
-         📸
-        </div>
-        <div class="adm-si-name">
-         Instagram
-        </div>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Link
-        </div>
-        <input class="adm-inp" id="adm-si-ig-url" placeholder="https://instagram.com/...">
-        <button class="adm-sbtn" onclick="admSaveSI('ig')">
-         Save
-        </button>
-       </div>
-       <div class="adm-si-row">
-        <div class="adm-si-row-lbl">
-         Logo
-        </div>
-        <input class="adm-inp" id="adm-si-ig-logo" placeholder="Image URL (optional)">
-       </div>
-      </div>
-      <div class="adm-pmsg" id="adm-si-msg">
-      </div>
-     </div>
-    </div>
     <!-- SIGN OUT -->
     <div class="adm-sec" id="adm-drag-sec">
      <div class="adm-sec-ttl">🕹️ Button Drag &amp; Drop</div>
@@ -6787,8 +6654,25 @@ let admState = {
   moviePlayers: DEFAULT_MOVIE_PLAYERS.map(p=>({...p})),
   tvPlayers: DEFAULT_TV_PLAYERS.map(p=>({...p})),
   animePlayers: DEFAULT_ANIME_PLAYERS.map(p=>({...p})),
-  social:{fb:{url:'#'},yt:{url:'#'},tg:{url:'#'},ig:{url:'#'}}
 };
+
+const SOCIAL_MEDIA_CONFIG = window.GTC_SOCIAL_MEDIA_CONFIG || {};
+const SOCIAL_MEDIA_KEYS = {fb:'facebook',yt:'youtube',tg:'telegram',ig:'instagram'};
+
+function applySocialMediaConfig(){
+  ['fb','yt','tg','ig'].forEach(k=>{
+    const el=$('si-'+k);
+    if(!el)return;
+    const url=String(SOCIAL_MEDIA_CONFIG[SOCIAL_MEDIA_KEYS[k]]||'#').trim()||'#';
+    el.href=url;
+    el.target='_blank';
+    el.rel='noopener noreferrer';
+    el.setAttribute('aria-disabled',url==='#'?'true':'false');
+    el.style.pointerEvents=url==='#'?'none':'auto';
+    el.style.opacity=url==='#'?'0.55':'';
+  });
+}
+applySocialMediaConfig();
 
 function applyServersFromState(){
   MOVIE_SERVERS.length=0;
@@ -6799,15 +6683,7 @@ function applyServersFromState(){
   admState.tvPlayers.forEach(p=>{
     TV_SERVERS.push({label:p.label, url:(id,s,e)=>p.url.replace(/\{id\}/g,id).replace(/\{s\}/g,s).replace(/\{e\}/g,e)});
   });
-  // Apply social icon hrefs + custom logos
-  ['fb','yt','tg','ig'].forEach(k=>{
-    const el=$('si-'+k);if(!el)return;
-    const s=admState.social[k]||{};
-    el.href=s.url||'#';
-    if(s.logo){
-      el.innerHTML=`<img src="${s.logo}" alt="${k}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;display:block">`;
-    }
-  });
+  applySocialMediaConfig();
 }
 
 function getAnimeUrl(id,ep){
@@ -6819,10 +6695,7 @@ function getAnimeUrl(id,ep){
 async function loadAdminSettings(){
   try{
     if(!fbAuth.currentUser)await fbAuth.signInAnonymously().catch(()=>{});
-    const [cfgSnap,socSnap]=await Promise.all([
-      fbDb.collection(ADM_COL).doc('config').get(),
-      fbDb.collection(ADM_COL).doc('social').get()
-    ]);
+    const cfgSnap=await fbDb.collection(ADM_COL).doc('config').get();
     if(cfgSnap.exists){
       const d=cfgSnap.data();
       if(d.iptv!==undefined)admState.iptv=d.iptv;
@@ -6835,10 +6708,6 @@ async function loadAdminSettings(){
       renderLTOrder();
       if(d.tvPlayers&&d.tvPlayers.length)admState.tvPlayers=d.tvPlayers;
       if(d.animePlayers)admState.animePlayers=d.animePlayers;
-    }
-    if(socSnap.exists){
-      const s=socSnap.data();
-      ['fb','yt','tg','ig'].forEach(k=>{if(s[k])admState.social[k]=s[k];});
     }
     applyServersFromState();
   }catch(e){console.warn('loadAdminSettings:',e.message);}
@@ -6876,11 +6745,6 @@ async function openAdminPanel(){
       if(d.tvPlayers&&d.tvPlayers.length)admState.tvPlayers=d.tvPlayers;
       if(d.animePlayers&&d.animePlayers.length)admState.animePlayers=d.animePlayers;
     }
-    const socSnap=await fbDb.collection(ADM_COL).doc('social').get();
-    if(socSnap.exists){
-      const s=socSnap.data();
-      ['fb','yt','tg','ig'].forEach(k=>{if(s[k])admState.social[k]=s[k];});
-    }
   }catch(e){console.warn('openAdminPanel fetch:',e.message);}
 
   // Fill inputs with latest values
@@ -6890,13 +6754,7 @@ async function openAdminPanel(){
   renderAdmPlayers('movie');
   renderAdmPlayers('tv');
   renderAdmPlayers('anime');
-  ['fb','yt','tg','ig'].forEach(k=>{
-    const s=admState.social[k]||{};
-    const urlEl=$('adm-si-'+k+'-url');if(urlEl)urlEl.value=s.url||'#';
-    const logoEl=$('adm-si-'+k+'-logo');if(logoEl)logoEl.value=s.logo||'';
-  });
   setAdmMsg('adm-lt-msg','');
-  setAdmMsg('adm-si-msg','');
 }
 
 function setAdmMsg(id,msg,isErr){
@@ -7028,24 +6886,6 @@ async function admSaveLT(type){
   const ifr=$('livetv-iframe');if(ifr){ifr.srcdoc='';ifr.src='about:blank';}
   await fbDb.collection(ADM_COL).doc('config').set({[type]:val},{merge:true});
   setAdmMsg('adm-lt-msg','✓ Saved');
-}
-
-async function admSaveSI(key){
-  const url=($('adm-si-'+key+'-url')||{}).value.trim()||'#';
-  const logo=($('adm-si-'+key+'-logo')||{}).value.trim()||'';
-  if(!admState.social[key])admState.social[key]={};
-  admState.social[key].url=url;
-  admState.social[key].logo=logo;
-  // Apply immediately
-  const el=$('si-'+key);
-  if(el){
-    el.href=url;
-    if(logo){
-      el.innerHTML=`<img src="${logo}" alt="${key}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;display:block">`;
-    }
-  }
-  await fbDb.collection(ADM_COL).doc('social').set({[key]:{url,logo}},{merge:true});
-  setAdmMsg('adm-si-msg','✓ Saved');
 }
 
 async function admSignOut(){

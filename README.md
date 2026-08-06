@@ -100,3 +100,20 @@ profile: {
 The email list supports multiple Gmail addresses. The admin name, image, and
 about text are read from this file and are not loaded from or saved to
 Firebase. Keep `admin-config.js` beside `index.html`.
+
+## Social media links
+
+Edit only `social-media-config.js` to set the header links for Facebook,
+YouTube, Telegram, and Instagram:
+
+```js
+window.GTC_SOCIAL_MEDIA_CONFIG = {
+  facebook: '#',
+  youtube: 'https://youtube.com/your-channel',
+  telegram: 'https://t.me/your-channel',
+  instagram: '#'
+};
+```
+
+Keep `#` for a platform without a URL. Icons with a URL open the link in a
+new browser tab. This file must stay beside `index.html` on GitHub Pages.

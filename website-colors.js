@@ -8,7 +8,7 @@
   'use strict';
 
   window.GTC_WEBSITE_COLORS = {
-    primaryColor: '#FF0000'
+    primaryColor: '#16a34a'
   };
 
   function applyWebsiteColor() {
