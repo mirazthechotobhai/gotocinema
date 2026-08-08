@@ -22,13 +22,13 @@
       name: 'Direct link',
       status: 'on',
       duration: 'unlimited',
-      url: 'https://example.com/'
+      url: 'https://www.effectivecpmnetwork.com/df5sd70j?key=a02eae7a3b3ae1ae3075611a045be956'
     },
 
     nativeBanner: {
       name: 'Native Banner',
       status: 'on',
-      duration: '#',
+      duration: 'unlimited',
       scriptSrc: 'https://pl30706913.effectivecpmnetwork.com/022365bfc231eeca69e2e1541fc25098/invoke.js',
       containerId: 'container-022365bfc231eeca69e2e1541fc25098'
     },
