@@ -12,8 +12,8 @@
       'rizviyankhan@gmail.com'
     ],
     profile: {
-      name: 'GoToCinema Admin',
-      imageUrl: 'logo-icon.png',
+      name: 'Free Movies',
+      imageUrl: '#',
       about: 'GoToCinema administrator'
     }
   };
