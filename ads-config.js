@@ -22,37 +22,37 @@
       name: 'Direct link',
       status: 'on',
       duration: 'unlimited',
-      url: 'https://www.effectivecpmnetwork.com/mt31bk6kgi?key=84312ad83e3a46232ecefedfb95bd705'
+      url: 'https://www.effectivecpmnetwork.com/df5sd70j?key=a02eae7a3b3ae1ae3075611a045be956'
     },
 
     nativeBanner: {
       name: 'Native Banner',
       status: 'on',
       duration: 'unlimited',
-      scriptSrc: 'https://pl30885733.effectivecpmnetwork.com/b3775426ad737420670c584a89ecce53/invoke.js',
-      containerId: 'container-b3775426ad737420670c584a89ecce53'
+      scriptSrc: 'https://pl30706913.effectivecpmnetwork.com/022365bfc231eeca69e2e1541fc25098/invoke.js',
+      containerId: 'container-022365bfc231eeca69e2e1541fc25098'
     },
 
     popunder: {
       name: 'Popunder',
       status: 'on',
       duration: '#',
-      scriptSrc: 'https://pl30885732.effectivecpmnetwork.com/25/67/6c/25676c4aa2ea8cc3aad3ebbe747b7fea.js'
+      scriptSrc: 'https://pl30706911.effectivecpmnetwork.com/09/68/6b/09686b86c2744d20c2ae98b69615b5cd.js'
     },
 
     socialBar: {
       name: 'Social Bar',
       status: 'on',
       duration: '#',
-      scriptSrc: 'https://pl30885734.effectivecpmnetwork.com/49/e6/2a/49e62aa249254fb00f321008acda713e.js'
+      scriptSrc: 'https://pl30706912.effectivecpmnetwork.com/5b/8b/4a/5b8b4a34456001f4d0922fa068070fce.js'
     },
 
     banner728x90: {
       name: 'Banner 728x90',
       status: 'on',
       duration: 'unlimited',
-      key: '3c9dc0777afb301a335c35f834cc22a1',
-      scriptSrc: 'https://www.highperformanceformat.com/3c9dc0777afb301a335c35f834cc22a1/invoke.js'
+      key: 'ddcb57682287c3bc03a188bbb32523b8',
+      scriptSrc: 'https://www.highperformanceformat.com/ddcb57682287c3bc03a188bbb32523b8/invoke.js'
     }
   };
 

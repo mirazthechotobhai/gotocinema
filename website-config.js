@@ -8,11 +8,11 @@
   'use strict';
 
   window.GTC_WEBSITE_CONFIG = {
-    siteName: 'FreeMovies',
-    pageTitle: 'Free Movies - Watch Movies, TV Shows & Anime',
-    logoText: 'Free Movies',
+    siteName: 'GoToCinema',
+    pageTitle: 'Go To Cinema - Watch Movies, TV Shows & Anime',
+    logoText: 'GOTO CINEMA',
     logoImagePosition: 2,
-    logoImageUrl: '#',
+    logoImageUrl: 'logo-icon.png',
     logoImageAlt: 'GoToCinema logo'
   };
 
