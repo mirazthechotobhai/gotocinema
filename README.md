@@ -1,119 +1,46 @@
-# GoToCinema
+# Go To Cinema (React Application)
 
-Complete static GoToCinema website export.
+A modern, fast React streaming entertainment portal for movies, TV shows, anime, and live TV channels. Rewritten as a modern React SPA using Vite, TypeScript, and Tailwind CSS.
 
-## Run locally
+## Features
+
+- **Movies, TV Shows & Anime**: Browse top trending, popular, and latest titles powered by TMDB and AniList APIs.
+- **Top Of The Week Carousel**: Continuous horizontal marquee carousel with touch/mouse drag scrolling and hover pause.
+- **Live TV & FIFA World Cup**: Built-in Hls.js IPTV streaming player with channel searching, category filtering, auto-retry on errors, and prev/next channel controls.
+- **Advanced Discover & Filter**: Filter by content type, searchable languages, genres, sorting, and release year.
+- **Real-Time Search Suggestions**: Fast debounced multi-search with thumbnail previews for both actors/people and media.
+- **Voice Search**: Built-in speech recognition support with visual indicator.
+- **Streaming Players & Custom Sources**:
+  - Multiple configurable streaming server options per title.
+  - Custom Player URL support with auto-conversion for YouTube links, Google Drive, Archive.org, and embed URLs.
+  - TV Season & Episode controls with previous/next episode navigation.
+  - YouTube trailer playback.
+- **Cast & Filmography (Person View)**: View detailed profiles, biographies, and full works for cast members.
+- **Deeplinking**: Shareable URL hashes (`#/:type/:slug/:id`) that open the detail view directly on page load.
+- **Firebase Authentication & Admin Panel**:
+  - Member login and registration with avatar upload via ImgBB.
+  - Administrator dashboard to manage IPTV playlists, custom stream server templates (`{id}`, `{s}`, `{e}`), and global drag settings.
+  - Media custom player and download URL overrides saved directly to Firestore.
+
+## Quick Start
 
 ```bash
-python3 -m http.server 8000
+# Install dependencies
+npm install
+
+# Start local dev server (port 3000)
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-Open `http://localhost:8000`.
+## Configuration Files
 
-## GitHub Pages
-
-Upload the contents of this folder to the repository root, then enable GitHub Pages from the repository's **Settings → Pages** menu using the branch root folder.
-
-## Ad and direct-link settings
-
-Edit only `ads-config.js`. Each setting has a name, a `status` value, and a `duration` value. Use `"on"` to enable it or `"off"` to disable it. Use `duration: "unlimited"` for an ad that always runs, or `duration: "#"` to follow the timer. No `index.html` edit is needed.
-
-The default timer shows timed ads for 10 minutes after a visitor's first visit, then hides the timer and pauses timed ads until the next cycle. Change `adsTimer.repeatEveryHours` to `1`, `2`, `10`, or any positive number of hours to choose when the next 10-minute window begins. The timer is stored per browser, so refreshing the page does not restart it.
-
-- Direct link: opens in a new tab when a movie, TV, or anime poster is clicked.
-- Popunder: loads globally for normal page interaction.
-- Social Bar: loads globally.
-- Banner 728x90: appears responsively below the player on details pages.
-- Native Banner: appears below the cast profiles on details pages.
-
-## Website name and logo
-
-Edit only `website-config.js` to change the visible website name, browser title, logo text, or logo image URL:
-
-```js
-siteName: 'GoToCinema',
-pageTitle: 'Go To Cinema - Watch Movies, TV Shows & Anime',
-logoText: 'GOTO CINEMA',
-logoImagePosition: 2,
-logoImageUrl: 'logo-icon.png'
-```
-
-`logoImagePosition` counts letters from left to right, ignoring spaces. With `2`, the logo replaces the second letter (`O`) in `GOTO`. Change it to `3` to replace the third letter. Set `logoImageUrl: '#'` to hide the logo and show the original letter again.
-
-The first words of `logoText` use the bold style and the last word uses the thin style. This also works with three-word names: the first two words stay bold and the last word stays thin. You can replace `logoImageUrl` with a local image path or a public image URL.
-
-## Website primary color
-
-Edit only `website-colors.js`:
-
-```js
-primaryColor: '#16a34a'
-```
-
-This changes the main red accent color to the selected color. The current export uses green (`#16a34a`) as the working example.
-
-The admin-panel color customization has been removed. Website colors are no longer read from or saved to Firebase; `website-colors.js` is the only primary-color source.
-
-## API settings
-
-Edit only `api-config.js` to change the public API settings used by the site:
-
-- Firebase authentication and Firestore project settings
-- TMDB API key, API URL, and image URL
-- AniList GraphQL URL and editable featured anime ID
-- ImgBB upload settings used for normal member profile photos
-
-This file is loaded before the main application code. It is included in this
-ZIP and must stay beside `index.html` when uploading the site to GitHub Pages.
-Do not place private server-only credentials in this browser-visible file.
-
-To change the featured anime loaded directly from AniList, edit only the
-`animeId` value inside `api-config.js`:
-
-```js
-anilist: {
-  apiUrl: 'https://graphql.anilist.co',
-  animeId: 47880
-}
-```
-
-The configured anime is shown first in the Anime tab. The remaining Anime tab
-items continue to load from AniList's trending and popular lists.
-
-## Admin settings
-
-Edit only `admin-config.js` to change administrator access and the admin
-profile:
-
-```js
-adminEmails: [
-  'first-admin@gmail.com',
-  'second-admin@gmail.com'
-],
-profile: {
-  name: 'GoToCinema Admin',
-  imageUrl: 'logo-icon.png',
-  about: 'GoToCinema administrator'
-}
-```
-
-The email list supports multiple Gmail addresses. The admin name, image, and
-about text are read from this file and are not loaded from or saved to
-Firebase. Keep `admin-config.js` beside `index.html`.
-
-## Social media links
-
-Edit only `social-media-config.js` to set the header links for Facebook,
-YouTube, Telegram, and Instagram:
-
-```js
-window.GTC_SOCIAL_MEDIA_CONFIG = {
-  facebook: '#',
-  youtube: 'https://youtube.com/your-channel',
-  telegram: 'https://t.me/your-channel',
-  instagram: '#'
-};
-```
-
-Keep `#` for a platform without a URL. Icons with a URL open the link in a
-new browser tab. This file must stay beside `index.html` on GitHub Pages.
+The application retains support for the external config files:
+- `ads-config.js`: Advertising, timed ads duration, direct links, and banner configuration.
+- `website-config.js`: Site title, branding text, and logo settings.
+- `website-colors.js`: Primary accent theme colors.
+- `api-config.js`: TMDB, AniList, Firebase, and ImgBB API credentials.
+- `admin-config.js`: Administrator email access and admin profile info.
+- `social-media-config.js`: Header social links (Facebook, YouTube, Telegram, Instagram).

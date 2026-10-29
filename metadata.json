@@ -1,0 +1,10 @@
+{
+  "name": "Go To Cinema",
+  "description": "Watch movies, TV shows, anime, and live TV channels with streaming sources, search, filter, and customizable players.",
+  "requestFeedback": false,
+  "userFacing": true,
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

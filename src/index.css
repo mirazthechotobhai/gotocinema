@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --c-bg: #262626;
+    --c-bg2: #181818;
+    --c-nav: #262626;
+    --c-primary: #ff0000;
+    --c-grad-l: #262626;
+    --c-grad-m: #ff0000;
+    --c-grad-r: #262626;
+    --c-btn-1: #ff0000;
+    --c-btn-2: #c00000;
+    --c-text: #ffffff;
+    --c-text2: #eeeeee;
+    --c-text3: #888888;
+    --c-rating: #f5c518;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    background: #262626;
+    color: #fff;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  button {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    cursor: pointer;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: var(--c-primary, #f00);
+  }
+}
+
+@keyframes nav-color-cycle {
+  0% { color: #f55; }
+  14% { color: #fa4; }
+  28% { color: #ff4; }
+  42% { color: #5f5; }
+  57% { color: #4fe; }
+  71% { color: #59f; }
+  85% { color: #b5f; }
+  100% { color: #f55; }
+}
+
+@keyframes tickUp {
+  0% { opacity: 0; transform: translateY(8px); }
+  12% { opacity: 1; transform: translateY(0); }
+  75% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes voicePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.15); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes dtSpin {
+  to { transform: rotate(360deg); }
+}
+
+.nav-cycle-text {
+  animation: nav-color-cycle 4s linear infinite;
+}
+
+.voice-listening {
+  color: #f00 !important;
+  animation: voicePulse 0.8s ease infinite;
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.cinema-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
