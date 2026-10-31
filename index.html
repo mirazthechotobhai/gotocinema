@@ -4265,7 +4265,7 @@ html{background:var(--c-bg)!important}
       </div>
      </div>
      <div id="dv-sandbox-toast" class="dv-sandbox-toast" style="display: none;"></div>
-     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-presentation">
+     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
      </iframe>
     </div>
    </div>
@@ -6725,7 +6725,7 @@ function initPlayerOverlay() {
 
 // ── DYNAMIC IFRAME SANDBOX & PROVIDER FALLBACK MANAGER ───────────────────────
 const GTC_DEFAULT_SANDBOX = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.defaultPermissions)
-  || 'allow-scripts allow-same-origin allow-forms allow-modals allow-presentation';
+  || 'allow-scripts allow-same-origin allow-forms allow-popups';
 
 function getSandboxBypassDomains() {
   try {

@@ -32,7 +32,7 @@
       uploadUrl: 'https://api.imgbb.com/1/upload'
     },
     sandbox: {
-      defaultPermissions: 'allow-scripts allow-same-origin allow-forms allow-modals allow-presentation',
+      defaultPermissions: 'allow-scripts allow-same-origin allow-forms allow-popups',
       // List provider domains here to disable iframe sandbox strictly for those providers:
       bypassDomains: []
     }
