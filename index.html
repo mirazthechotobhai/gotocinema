@@ -251,8 +251,12 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .dv-close-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#cbd5e1;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
 .dv-close-btn:hover{background:rgba(255,255,255,.22);color:#fff}
 #dv-player-section{height:58vh;display:flex;flex-direction:column;background:#060a12;border-bottom:1px solid #1e293b}
-#dv-player-wrap{flex:1;min-height:0;width:100%;background:#000;display:none}
+#dv-player-wrap{flex:1;min-height:0;width:100%;background:#000;display:none;position:relative}
 #dv-player-wrap iframe{width:100%;height:100%;border:none;display:block}
+.player-click-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:20;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.player-overlay-play-btn{width:68px;height:68px;border-radius:50%;background:rgba(15,23,42,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 25px -5px rgba(0,0,0,.6),0 0 15px rgba(255,0,0,.4);transition:transform .2s cubic-bezier(.16,1,.3,1),background .2s ease,box-shadow .2s ease;pointer-events:none}
+.player-overlay-play-btn svg{width:28px;height:28px;margin-left:3px;fill:#fff}
+.player-click-overlay:hover .player-overlay-play-btn{transform:scale(1.1);background:rgba(220,38,38,.85);box-shadow:0 15px 30px -5px rgba(0,0,0,.7),0 0 25px rgba(220,38,38,.6)}
 #dv-player-placeholder{flex:1;min-height:0;width:100%;background:#080d18;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;cursor:pointer}
 .gtc-ad-slot{width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .gtc-banner-slot{min-height:90px;padding:10px 16px;background:#060a12;border-bottom:1px solid #1e293b}
@@ -4229,7 +4233,15 @@ html{background:var(--c-bg)!important}
       </div>
      </div>
     </div>
-    <div id="dv-player-wrap" style="display: none;">
+    <div id="dv-player-wrap" style="display: none; position: relative;">
+     <!-- First-Click Transparent Overlay (Ad-Click Intercept) -->
+     <div id="player-click-overlay" class="player-click-overlay" aria-label="Start video playback" role="button" tabindex="0">
+      <div class="player-overlay-play-btn" aria-hidden="true">
+       <svg viewBox="0 0 24 24">
+        <polygon points="6 4 20 12 6 20 6 4"></polygon>
+       </svg>
+      </div>
+     </div>
      <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player">
      </iframe>
     </div>
@@ -6019,6 +6031,7 @@ async function loadTab(type){
   if(dvIframe){dvIframe.src='';}
   const dvWrap=$('dv-player-wrap');
   if(dvWrap){dvWrap.style.display='none';}
+  if(typeof dismissPlayerOverlay==='function')dismissPlayerOverlay();
   const dvPh=$('dv-player-placeholder');
   if(dvPh){dvPh.style.display='flex';}
   const dv=$('detail-view');
@@ -6549,9 +6562,58 @@ async function updateSeasonEps(season){
   $('se-total-e').textContent=totalEps||'\u2014';
 }
 
+// ── FIRST-CLICK TRANSPARENT OVERLAY (AD-CLICK INTERCEPT) ─────────────────────
+function armPlayerOverlay(){
+  const overlay=$('player-click-overlay');
+  if(overlay) overlay.style.display='flex';
+}
+
+function dismissPlayerOverlay(e){
+  const overlay=$('player-click-overlay');
+  if(!overlay||overlay.style.display==='none') return;
+  if(e){
+    if(e.cancelable && e.type!=='scroll') e.preventDefault();
+    e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }
+  overlay.style.display='none';
+}
+
+function initPlayerOverlay(){
+  const overlay=$('player-click-overlay');
+  if(!overlay) return;
+
+  // Primary click dismissal (desktop and mobile click)
+  overlay.addEventListener('click', dismissPlayerOverlay, {capture:true, passive:false});
+  overlay.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'||e.key===' '){
+      dismissPlayerOverlay(e);
+    }
+  });
+
+  // Mobile pointer support: dismiss on genuine tap without blocking page scrolling
+  let startX=0, startY=0, hasMoved=false;
+  overlay.addEventListener('pointerdown', e=>{
+    startX=e.clientX;
+    startY=e.clientY;
+    hasMoved=false;
+  },{passive:true});
+
+  overlay.addEventListener('pointermove', e=>{
+    if(Math.abs(e.clientX-startX)>12||Math.abs(e.clientY-startY)>12){
+      hasMoved=true;
+    }
+  },{passive:true});
+
+  overlay.addEventListener('pointerup', e=>{
+    if(!hasMoved) dismissPlayerOverlay(e);
+  },{capture:true, passive:false});
+}
+
 function setPlayer(src){
   $('dv-player-wrap').style.display='flex';$('dv-player-placeholder').style.display='none';
   $('dv-iframe').src=src;
+  armPlayerOverlay();
   if(currentDetail&&currentDetail.contentType==='anime')$('ep-nav-bar').classList.add('show');
   else $('ep-nav-bar').classList.remove('show');
 }
@@ -6570,7 +6632,8 @@ function playServer(){
 
 $('dv-play-circle').onclick=playServer;
 $('dv-player-placeholder').onclick=playServer;
-$('dv-close-btn').onclick=()=>{clearDetailHash();$('detail-view').classList.remove('open');$('dv-iframe').src='';document.body.style.overflow='';document.documentElement.style.overflow=''};
+$('dv-close-btn').onclick=()=>{clearDetailHash();$('detail-view').classList.remove('open');$('dv-iframe').src='';dismissPlayerOverlay();document.body.style.overflow='';document.documentElement.style.overflow=''};
+initPlayerOverlay();
 $('se-play-btn').onclick=()=>{currentSeason=parseInt($('tv-season-input').value)||1;currentEp=parseInt($('tv-ep-input').value)||1;playServer()};
 $('s-up').onclick=()=>{const v=parseInt($('tv-season-input').value)+1;$('tv-season-input').value=Math.min(v,tvSeasons.length||99);updateSeasonEps(parseInt($('tv-season-input').value))};
 $('s-down').onclick=()=>{const v=parseInt($('tv-season-input').value)-1;$('tv-season-input').value=Math.max(v,1);updateSeasonEps(parseInt($('tv-season-input').value))};
