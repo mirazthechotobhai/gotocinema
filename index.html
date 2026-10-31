@@ -4265,7 +4265,7 @@ html{background:var(--c-bg)!important}
       </div>
      </div>
      <div id="dv-sandbox-toast" class="dv-sandbox-toast" style="display: none;"></div>
-     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
+     <iframe allow="autoplay; fullscreen" allowfullscreen="" frameborder="0" id="dv-iframe" src="" title="Player">
      </iframe>
     </div>
    </div>
@@ -6727,13 +6727,29 @@ function initPlayerOverlay() {
 const GTC_DEFAULT_SANDBOX = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.defaultPermissions)
   || 'allow-scripts allow-same-origin allow-forms allow-popups';
 
+// Built-in list of strict embed providers that actively test for and reject the sandbox attribute:
+const GTC_STRICT_UNSANDBOXED_PROVIDERS = [
+  'cinemaos.in',
+  'cinemaos.tech',
+  'cinemaos.live',
+  'embed.streammafia.to',
+  'streammafia.to',
+  'vembed.click',
+  'multiembed.mov',
+  'peachify.top',
+  'boredflix.cc',
+  'vidbinge.to'
+];
+
 function getSandboxBypassDomains() {
   try {
     const configDomains = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.bypassDomains) || [];
-    const localDomains = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '[]');
-    return Array.from(new Set([...configDomains, ...localDomains]));
+    const localStore = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '{}');
+    const localDomains = Array.isArray(localStore) ? localStore : Object.keys(localStore).filter(k => localStore[k]);
+    return Array.from(new Set([...GTC_STRICT_UNSANDBOXED_PROVIDERS, ...configDomains, ...localDomains]));
   } catch (e) {
-    return (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.bypassDomains) || [];
+    const configDomains = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.bypassDomains) || [];
+    return Array.from(new Set([...GTC_STRICT_UNSANDBOXED_PROVIDERS, ...configDomains]));
   }
 }
 
@@ -6741,6 +6757,13 @@ function isDomainSandboxBypassed(url) {
   if (!url || url === 'about:blank') return false;
   try {
     const domain = new URL(url).hostname.toLowerCase();
+
+    // Check local manual override if set
+    const localStore = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '{}');
+    if (!Array.isArray(localStore) && typeof localStore[domain] === 'boolean') {
+      return localStore[domain];
+    }
+
     const bypassList = getSandboxBypassDomains();
     return bypassList.some(d => domain === d.toLowerCase() || domain.endsWith('.' + d.toLowerCase()));
   } catch (e) {
@@ -6750,14 +6773,15 @@ function isDomainSandboxBypassed(url) {
 
 function setDomainSandboxBypass(domain, shouldBypass) {
   try {
-    let list = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '[]');
-    domain = domain.toLowerCase();
-    if (shouldBypass) {
-      if (!list.includes(domain)) list.push(domain);
-    } else {
-      list = list.filter(d => d !== domain);
+    let store = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '{}');
+    if (Array.isArray(store)) {
+      const arr = store;
+      store = {};
+      arr.forEach(d => { store[d.toLowerCase()] = true; });
     }
-    localStorage.setItem('gtc_sandbox_bypass_domains', JSON.stringify(list));
+    domain = domain.toLowerCase();
+    store[domain] = shouldBypass;
+    localStorage.setItem('gtc_sandbox_bypass_domains', JSON.stringify(store));
   } catch (e) {}
 }
 
@@ -6779,12 +6803,20 @@ function applyPlayerSandbox(url) {
   const iframe = $('dv-iframe');
   if (!iframe) return;
 
+  // Always maintain responsive rendering, border, and fullscreen attributes
+  iframe.setAttribute('frameborder', '0');
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.setAttribute('allow', 'autoplay; fullscreen');
+
   const bypassed = isDomainSandboxBypassed(url);
   if (bypassed) {
+    // Completely remove sandbox attribute so strict providers don't halt playback
     iframe.removeAttribute('sandbox');
-    console.info(`[GTC Sandbox] Bypassing sandbox attribute for provider domain: ${url}`);
+    console.info(`[GTC Sandbox] Completely removed sandbox attribute for strict provider: ${url}`);
   } else {
+    // Safer servers retain strict sandboxing
     iframe.setAttribute('sandbox', GTC_DEFAULT_SANDBOX);
+    console.info(`[GTC Sandbox] Enforced sandbox attribute for safer server: ${url}`);
   }
 }
 
@@ -6807,7 +6839,7 @@ function toggleSandboxForDomain(url) {
       armPlayerOverlay();
     }
     rebuildActionRow();
-    showSandboxToast(newBypassed ? `Sandbox disabled for ${domain} (Anti-AdBlock Fallback)` : `Strict sandbox active for ${domain}`);
+    showSandboxToast(newBypassed ? `Sandbox removed for ${domain} (Strict Provider Mode)` : `Sandbox enabled for ${domain} (Safe Server Mode)`);
   } catch (e) {}
 }
 

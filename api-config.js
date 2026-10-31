@@ -33,8 +33,19 @@
     },
     sandbox: {
       defaultPermissions: 'allow-scripts allow-same-origin allow-forms allow-popups',
-      // List provider domains here to disable iframe sandbox strictly for those providers:
-      bypassDomains: []
+      // Strict provider domains that actively detect sandbox and halt playback:
+      bypassDomains: [
+        'cinemaos.in',
+        'cinemaos.tech',
+        'cinemaos.live',
+        'embed.streammafia.to',
+        'streammafia.to',
+        'vembed.click',
+        'multiembed.mov',
+        'peachify.top',
+        'boredflix.cc',
+        'vidbinge.to'
+      ]
     }
   };
 })(window);
