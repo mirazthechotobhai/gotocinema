@@ -253,10 +253,18 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 #dv-player-section{height:58vh;display:flex;flex-direction:column;background:#060a12;border-bottom:1px solid #1e293b}
 #dv-player-wrap{flex:1;min-height:0;width:100%;background:#000;display:none;position:relative}
 #dv-player-wrap iframe{width:100%;height:100%;border:none;display:block}
-.player-click-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:20;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.player-overlay-play-btn{width:68px;height:68px;border-radius:50%;background:rgba(15,23,42,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 25px -5px rgba(0,0,0,.6),0 0 15px rgba(255,0,0,.4);transition:transform .2s cubic-bezier(.16,1,.3,1),background .2s ease,box-shadow .2s ease;pointer-events:none}
-.player-overlay-play-btn svg{width:28px;height:28px;margin-left:3px;fill:#fff}
-.player-click-overlay:hover .player-overlay-play-btn{transform:scale(1.1);background:rgba(220,38,38,.85);box-shadow:0 15px 30px -5px rgba(0,0,0,.7),0 0 25px rgba(220,38,38,.6)}
+.player-click-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:20;background:rgba(0,0,0,.08);cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:opacity .25s ease}
+.player-overlay-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;transform:translateY(0);transition:transform .2s cubic-bezier(.16,1,.3,1)}
+.player-click-overlay:active .player-overlay-card{transform:scale(.96)}
+.player-overlay-play-btn{width:72px;height:72px;border-radius:50%;background:rgba(15,23,42,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 14px 30px -4px rgba(0,0,0,.7),0 0 20px rgba(239,68,68,.5);transition:transform .25s cubic-bezier(.16,1,.3,1),background .2s ease,box-shadow .2s ease}
+.player-overlay-play-btn svg{width:30px;height:30px;margin-left:3px;fill:#fff}
+.player-click-overlay:hover .player-overlay-play-btn{transform:scale(1.08);background:rgba(220,38,38,.95);box-shadow:0 18px 36px -4px rgba(0,0,0,.8),0 0 28px rgba(220,38,38,.7)}
+.player-overlay-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:9999px;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);color:#f8fafc;font-size:12px;font-weight:600;letter-spacing:.3px;box-shadow:0 8px 20px rgba(0,0,0,.5);transition:background .2s,border-color .2s}
+.player-overlay-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;animation:adTrapDotPulse 1.8s ease-in-out infinite}
+@keyframes adTrapDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.player-overlay-subtext{font-size:11px;color:#94a3b8;font-weight:500;text-shadow:0 2px 4px rgba(0,0,0,.8)}
+.player-click-overlay.pulse-badge .player-overlay-pill{animation:adTrapPillPulse .35s ease}
+@keyframes adTrapPillPulse{0%{transform:scale(1)}50%{transform:scale(1.08);background:rgba(220,38,38,.9);border-color:rgba(255,255,255,.6)}100%{transform:scale(1)}}
 #dv-player-placeholder{flex:1;min-height:0;width:100%;background:#080d18;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;cursor:pointer}
 .gtc-ad-slot{width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .gtc-banner-slot{min-height:90px;padding:10px 16px;background:#060a12;border-bottom:1px solid #1e293b}
@@ -4234,15 +4242,22 @@ html{background:var(--c-bg)!important}
      </div>
     </div>
     <div id="dv-player-wrap" style="display: none; position: relative;">
-     <!-- First-Click Transparent Overlay (Ad-Click Intercept) -->
+     <!-- Multi-Click Ad-Trap Overlay (Popup & Redirect Intercept) -->
      <div id="player-click-overlay" class="player-click-overlay" aria-label="Start video playback" role="button" tabindex="0">
-      <div class="player-overlay-play-btn" aria-hidden="true">
-       <svg viewBox="0 0 24 24">
-        <polygon points="6 4 20 12 6 20 6 4"></polygon>
-       </svg>
+      <div class="player-overlay-card">
+       <div class="player-overlay-play-btn" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+         <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+       </div>
+       <div class="player-overlay-pill">
+        <span class="player-overlay-dot"></span>
+        <span id="player-overlay-text">Click to Play Video</span>
+       </div>
+       <div class="player-overlay-subtext" id="player-overlay-subtext">Tap to initialize playback</div>
       </div>
      </div>
-     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player">
+     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms">
      </iframe>
     </div>
    </div>
@@ -5492,7 +5507,7 @@ const LIVETV_HTML=`<!DOCTYPE html>
           scrolling="yes"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          sandbox="allow-same-origin allow-scripts allow-forms"
           title="Live TV"
         ></iframe>
       </div>
@@ -6562,52 +6577,120 @@ async function updateSeasonEps(season){
   $('se-total-e').textContent=totalEps||'\u2014';
 }
 
-// ── FIRST-CLICK TRANSPARENT OVERLAY (AD-CLICK INTERCEPT) ─────────────────────
-function armPlayerOverlay(){
-  const overlay=$('player-click-overlay');
-  if(overlay) overlay.style.display='flex';
-}
+// ── MULTI-CLICK AD-TRAP OVERLAY (POPUP & REDIRECT INTERCEPT) ─────────────────
+const PLAYER_AD_TRAP_MAX_CLICKS = 2; // Configurable: 1, 2, or 3 clicks threshold
+let playerTrapClicksRemaining = PLAYER_AD_TRAP_MAX_CLICKS;
+let playerTrapLastInteraction = 0;
 
-function dismissPlayerOverlay(e){
-  const overlay=$('player-click-overlay');
-  if(!overlay||overlay.style.display==='none') return;
-  if(e){
-    if(e.cancelable && e.type!=='scroll') e.preventDefault();
-    e.stopPropagation();
-    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+// Localized window.open safety net: blocks rogue popup tabs while player trap is active
+const originalWindowOpen = window.open;
+window.open = function(url, target, features) {
+  if (playerTrapClicksRemaining > 0 && $('detail-view') && $('detail-view').classList.contains('open')) {
+    console.warn("Blocked rogue popup attempt during ad-trap window:", url);
+    return null;
   }
-  overlay.style.display='none';
+  return originalWindowOpen.apply(window, arguments);
+};
+
+function updatePlayerOverlayUI() {
+  const textEl = $('player-overlay-text');
+  const subtextEl = $('player-overlay-subtext');
+  const overlay = $('player-click-overlay');
+  if (!textEl || !subtextEl || !overlay) return;
+
+  if (playerTrapClicksRemaining >= PLAYER_AD_TRAP_MAX_CLICKS) {
+    textEl.textContent = 'Click to Play Video';
+    subtextEl.textContent = 'Tap to initialize playback';
+  } else if (playerTrapClicksRemaining === 1) {
+    textEl.textContent = 'Click 1 more time to play';
+    subtextEl.textContent = 'Ad popups blocked — click to start';
+    overlay.classList.remove('pulse-badge');
+    void overlay.offsetWidth;
+    overlay.classList.add('pulse-badge');
+  } else {
+    textEl.textContent = 'Click ' + playerTrapClicksRemaining + ' more times to play';
+    subtextEl.textContent = 'Intercepting unwanted ads...';
+    overlay.classList.remove('pulse-badge');
+    void overlay.offsetWidth;
+    overlay.classList.add('pulse-badge');
+  }
 }
 
-function initPlayerOverlay(){
-  const overlay=$('player-click-overlay');
-  if(!overlay) return;
+function armPlayerOverlay() {
+  playerTrapClicksRemaining = PLAYER_AD_TRAP_MAX_CLICKS;
+  const overlay = $('player-click-overlay');
+  if (overlay) {
+    updatePlayerOverlayUI();
+    overlay.style.display = 'flex';
+  }
+}
+
+function handleOverlayInteraction(e) {
+  const overlay = $('player-click-overlay');
+  if (!overlay || overlay.style.display === 'none') return;
+
+  // Debounce to prevent dual-firing from pointerup + click on mobile devices
+  const now = Date.now();
+  if (now - playerTrapLastInteraction < 220) {
+    if (e && e.cancelable && e.type !== 'scroll') e.preventDefault();
+    if (e) { e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    return;
+  }
+  playerTrapLastInteraction = now;
+
+  if (e) {
+    if (e.cancelable && e.type !== 'scroll') e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }
+
+  playerTrapClicksRemaining--;
+
+  if (playerTrapClicksRemaining <= 0) {
+    // Threshold reached: cleanly unmount/hide overlay so native player controls receive pointer events
+    overlay.style.display = 'none';
+  } else {
+    updatePlayerOverlayUI();
+  }
+}
+
+function dismissPlayerOverlay() {
+  playerTrapClicksRemaining = 0;
+  const overlay = $('player-click-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function initPlayerOverlay() {
+  const overlay = $('player-click-overlay');
+  if (!overlay) return;
 
   // Primary click dismissal (desktop and mobile click)
-  overlay.addEventListener('click', dismissPlayerOverlay, {capture:true, passive:false});
-  overlay.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter'||e.key===' '){
-      dismissPlayerOverlay(e);
+  overlay.addEventListener('click', handleOverlayInteraction, { capture: true, passive: false });
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleOverlayInteraction(e);
     }
   });
 
-  // Mobile pointer support: dismiss on genuine tap without blocking page scrolling
-  let startX=0, startY=0, hasMoved=false;
-  overlay.addEventListener('pointerdown', e=>{
-    startX=e.clientX;
-    startY=e.clientY;
-    hasMoved=false;
-  },{passive:true});
+  // Mobile pointer support: consume genuine taps without blocking standard vertical page scrolling
+  let startX = 0, startY = 0, hasMoved = false;
+  overlay.addEventListener('pointerdown', (e) => {
+    startX = e.clientX;
+    startY = e.clientY;
+    hasMoved = false;
+  }, { passive: true });
 
-  overlay.addEventListener('pointermove', e=>{
-    if(Math.abs(e.clientX-startX)>12||Math.abs(e.clientY-startY)>12){
-      hasMoved=true;
+  overlay.addEventListener('pointermove', (e) => {
+    if (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12) {
+      hasMoved = true;
     }
-  },{passive:true});
+  }, { passive: true });
 
-  overlay.addEventListener('pointerup', e=>{
-    if(!hasMoved) dismissPlayerOverlay(e);
-  },{capture:true, passive:false});
+  overlay.addEventListener('pointerup', (e) => {
+    if (!hasMoved) {
+      handleOverlayInteraction(e);
+    }
+  }, { capture: true, passive: false });
 }
 
 function setPlayer(src){
