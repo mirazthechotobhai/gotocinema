@@ -318,6 +318,13 @@ a{text-decoration:none;color:inherit}img{max-width:100%;vertical-align:middle;bo
 .btn-download:disabled{opacity:.38;cursor:not-allowed}
 .adm-edit-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(251,191,36,.12);border:1.5px solid rgba(251,191,36,.35);border-radius:6px;color:#fbbf24;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer}
 .adm-edit-btn:hover{background:rgba(251,191,36,.25)}
+.btn-sandbox{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:18px;font-size:11px;font-weight:600;cursor:pointer;border:none;white-space:nowrap;transition:all .2s;backdrop-filter:blur(8px);letter-spacing:.2px;flex-shrink:0}
+.btn-sandbox:hover{transform:translateY(-1px);opacity:.95}
+.btn-sandbox-protected{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35)!important;color:#86efac}
+.btn-sandbox-protected:hover{background:rgba(34,197,94,.22);border-color:rgba(34,197,94,.6)!important}
+.btn-sandbox-fallback{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4)!important;color:#fcd34d}
+.btn-sandbox-fallback:hover{background:rgba(245,158,11,.25);border-color:rgba(245,158,11,.7)!important}
+.dv-sandbox-toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.92);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;z-index:30;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.6);transition:opacity .3s,transform .3s}
 .dv-divider{height:1px;background:linear-gradient(to right,transparent,#1e293b 20%,#1e293b 80%,transparent);margin:8px 28px 16px}
 .dv-plot{font-size:14px;line-height:1.8;color:#94a3b8;padding:0 28px 16px}
 #dv-cast-section{padding:28px 28px 48px}
@@ -4257,7 +4264,8 @@ html{background:var(--c-bg)!important}
        <div class="player-overlay-subtext" id="player-overlay-subtext">Tap to initialize playback</div>
       </div>
      </div>
-     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms">
+     <div id="dv-sandbox-toast" class="dv-sandbox-toast" style="display: none;"></div>
+     <iframe allow="autoplay; fullscreen" allowfullscreen="" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-presentation">
      </iframe>
     </div>
    </div>
@@ -6564,6 +6572,28 @@ function rebuildActionRow(){
     eb.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> DL';
     eb.onclick=()=>openAurl('download');row.appendChild(eb);
   }
+
+  // Dynamic Sandbox Toggle Button for the active video stream
+  const currentSrc = $('dv-iframe') ? $('dv-iframe').src : '';
+  if (currentSrc && currentSrc !== 'about:blank' && $('dv-player-wrap') && $('dv-player-wrap').style.display !== 'none') {
+    try {
+      const parsedUrl = new URL(currentSrc);
+      const host = parsedUrl.hostname;
+      const isBypassed = isDomainSandboxBypassed(currentSrc);
+      const sboxBtn = document.createElement('button');
+      sboxBtn.id = 'dv-sandbox-btn';
+      sboxBtn.className = `btn-sandbox ${isBypassed ? 'btn-sandbox-fallback' : 'btn-sandbox-protected'}`;
+      sboxBtn.title = isBypassed
+        ? `Sandbox disabled for ${host} (Anti-AdBlock Fallback). Click to re-enable strict sandbox.`
+        : `Strict Sandbox active for ${host}. Click if player displays "AdBlock / Sandbox Detected" error.`;
+      sboxBtn.innerHTML = isBypassed
+        ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Sandbox: Bypass</span>`
+        : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><span>Sandbox: Active</span>`;
+      sboxBtn.onclick = () => toggleSandboxForDomain(currentSrc);
+      row.appendChild(sboxBtn);
+    } catch (e) {}
+  }
+
   const sb=document.createElement('button');sb.className='dv-btn btn-share';
   sb.title='Share';
   sb.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
@@ -6693,10 +6723,100 @@ function initPlayerOverlay() {
   }, { capture: true, passive: false });
 }
 
+// ── DYNAMIC IFRAME SANDBOX & PROVIDER FALLBACK MANAGER ───────────────────────
+const GTC_DEFAULT_SANDBOX = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.defaultPermissions)
+  || 'allow-scripts allow-same-origin allow-forms allow-modals allow-presentation';
+
+function getSandboxBypassDomains() {
+  try {
+    const configDomains = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.bypassDomains) || [];
+    const localDomains = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '[]');
+    return Array.from(new Set([...configDomains, ...localDomains]));
+  } catch (e) {
+    return (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.bypassDomains) || [];
+  }
+}
+
+function isDomainSandboxBypassed(url) {
+  if (!url || url === 'about:blank') return false;
+  try {
+    const domain = new URL(url).hostname.toLowerCase();
+    const bypassList = getSandboxBypassDomains();
+    return bypassList.some(d => domain === d.toLowerCase() || domain.endsWith('.' + d.toLowerCase()));
+  } catch (e) {
+    return false;
+  }
+}
+
+function setDomainSandboxBypass(domain, shouldBypass) {
+  try {
+    let list = JSON.parse(localStorage.getItem('gtc_sandbox_bypass_domains') || '[]');
+    domain = domain.toLowerCase();
+    if (shouldBypass) {
+      if (!list.includes(domain)) list.push(domain);
+    } else {
+      list = list.filter(d => d !== domain);
+    }
+    localStorage.setItem('gtc_sandbox_bypass_domains', JSON.stringify(list));
+  } catch (e) {}
+}
+
+let sandboxToastTimer = null;
+function showSandboxToast(msg) {
+  const toast = $('dv-sandbox-toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  toast.style.opacity = '1';
+  clearTimeout(sandboxToastTimer);
+  sandboxToastTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => { toast.style.display = 'none'; }, 300);
+  }, 2600);
+}
+
+function applyPlayerSandbox(url) {
+  const iframe = $('dv-iframe');
+  if (!iframe) return;
+
+  const bypassed = isDomainSandboxBypassed(url);
+  if (bypassed) {
+    iframe.removeAttribute('sandbox');
+    console.info(`[GTC Sandbox] Bypassing sandbox attribute for provider domain: ${url}`);
+  } else {
+    iframe.setAttribute('sandbox', GTC_DEFAULT_SANDBOX);
+  }
+}
+
+function toggleSandboxForDomain(url) {
+  if (!url) return;
+  try {
+    const domain = new URL(url).hostname;
+    const currentlyBypassed = isDomainSandboxBypassed(url);
+    const newBypassed = !currentlyBypassed;
+    setDomainSandboxBypass(domain, newBypassed);
+
+    const iframe = $('dv-iframe');
+    if (iframe) {
+      if (newBypassed) {
+        iframe.removeAttribute('sandbox');
+      } else {
+        iframe.setAttribute('sandbox', GTC_DEFAULT_SANDBOX);
+      }
+      iframe.src = url;
+      armPlayerOverlay();
+    }
+    rebuildActionRow();
+    showSandboxToast(newBypassed ? `Sandbox disabled for ${domain} (Anti-AdBlock Fallback)` : `Strict sandbox active for ${domain}`);
+  } catch (e) {}
+}
+
 function setPlayer(src){
   $('dv-player-wrap').style.display='flex';$('dv-player-placeholder').style.display='none';
+  applyPlayerSandbox(src);
   $('dv-iframe').src=src;
   armPlayerOverlay();
+  rebuildActionRow();
   if(currentDetail&&currentDetail.contentType==='anime')$('ep-nav-bar').classList.add('show');
   else $('ep-nav-bar').classList.remove('show');
 }

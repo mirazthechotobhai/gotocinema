@@ -30,6 +30,11 @@
     imgbb: {
       apiKey: '9cf974acba9d5d5d715bf14db07d697a',
       uploadUrl: 'https://api.imgbb.com/1/upload'
+    },
+    sandbox: {
+      defaultPermissions: 'allow-scripts allow-same-origin allow-forms allow-modals allow-presentation',
+      // List provider domains here to disable iframe sandbox strictly for those providers:
+      bypassDomains: []
     }
   };
 })(window);
