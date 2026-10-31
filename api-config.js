@@ -32,7 +32,7 @@
       uploadUrl: 'https://api.imgbb.com/1/upload'
     },
     sandbox: {
-      defaultPermissions: 'allow-scripts allow-same-origin allow-forms allow-popups',
+      defaultPermissions: 'allow-scripts allow-same-origin allow-forms allow-presentation',
       // Strict provider domains that actively detect sandbox and halt playback:
       bypassDomains: [
         'cinemaos.in',

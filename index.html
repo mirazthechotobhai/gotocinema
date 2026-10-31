@@ -4265,7 +4265,7 @@ html{background:var(--c-bg)!important}
       </div>
      </div>
      <div id="dv-sandbox-toast" class="dv-sandbox-toast" style="display: none;"></div>
-     <iframe allow="autoplay; fullscreen" allowfullscreen="" frameborder="0" id="dv-iframe" src="" title="Player">
+     <iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen="" frameborder="0" id="dv-iframe" src="" title="Player" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation">
      </iframe>
     </div>
    </div>
@@ -6725,7 +6725,7 @@ function initPlayerOverlay() {
 
 // ── DYNAMIC IFRAME SANDBOX & PROVIDER FALLBACK MANAGER ───────────────────────
 const GTC_DEFAULT_SANDBOX = (window.GTC_API_CONFIG && window.GTC_API_CONFIG.sandbox && window.GTC_API_CONFIG.sandbox.defaultPermissions)
-  || 'allow-scripts allow-same-origin allow-forms allow-popups';
+  || 'allow-scripts allow-same-origin allow-forms allow-presentation';
 
 // Built-in list of strict embed providers that actively test for and reject the sandbox attribute:
 const GTC_STRICT_UNSANDBOXED_PROVIDERS = [
@@ -6806,7 +6806,7 @@ function applyPlayerSandbox(url) {
   // Always maintain responsive rendering, border, and fullscreen attributes
   iframe.setAttribute('frameborder', '0');
   iframe.setAttribute('allowfullscreen', '');
-  iframe.setAttribute('allow', 'autoplay; fullscreen');
+  iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
 
   const bypassed = isDomainSandboxBypassed(url);
   if (bypassed) {
