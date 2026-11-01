@@ -4827,22 +4827,14 @@ async function fetchPage(type,page){
   let d;
   if(type==='movie'){d=await tmdb('/movie/popular',{page});return d.results.map(r=>({...r,contentType:'movie'}))}
   if(type==='tv'){d=await tmdb('/tv/popular',{page});return d.results.map(r=>({...r,contentType:'tv'}))}
-  // AniList: page1=trending, page2=new releases, page3+=popular
-  const sortMap={1:['TRENDING_DESC'],2:['START_DATE_DESC'],3:['POPULARITY_DESC']};
-  const alSort=sortMap[page]||['POPULARITY_DESC'];
-  const alPage=page>3?page-2:1;
-  const results=await fetchAniList({page:alPage,perPage:30,sort:alSort});
-  const items=results.map(anilistToItem);
-  if(page===1&&ANILIST_DEFAULT_ID){
-    try{
-      const featured=await fetchAniListById(ANILIST_DEFAULT_ID);
-      if(featured){
-        const featuredItem=anilistToItem(featured);
-        return [featuredItem,...items.filter(item=>item.id!==featuredItem.id)];
-      }
-    }catch(ex){}
-  }
-  return items;
+  // Load Anime directly from TMDB using Japanese Animation discover query
+  d = await tmdb('/discover/tv', {
+    with_genres: '16',
+    with_original_language: 'ja',
+    sort_by: 'popularity.desc',
+    page
+  });
+  return (d.results || []).map(r => ({...r, contentType: 'anime'}));
 }
 
 function getCached(t){return cache[t]||{items:[],lastPage:0}}
@@ -6423,40 +6415,8 @@ async function openDetail(item){
     (async()=>{
       if(!dd){
         try{
-          if(item.contentType==='anime'){
-            // Reference: direct AniList fetch for anime detail (genres, episodes, trailer, cast)
-            const aniQ=`query($id:Int){Media(id:$id,type:ANIME){id title{romaji english}coverImage{extraLarge large}episodes averageScore description(asHtml:false)startDate{year}genres studios{nodes{name}}trailer{id site}characters(role:MAIN,sort:ID,page:1,perPage:12){edges{node{id name{full}image{large}}role}}}}`;
-            const aniRes=await fetch(ANILIST_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:aniQ,variables:{id:parseInt(item.id)}})}).catch(()=>null);
-            const aniData=aniRes?await aniRes.json().catch(()=>({})):{};
-            const media=aniData?.data?.Media;
-            if(media){
-              const tKey=(media.trailer?.site==='youtube')?media.trailer.id:null;
-              const epCount=media.episodes||0;
-              dd={
-                genres:(media.genres||[]).map(g=>({name:g})),
-                seasons:epCount?[{season_number:1,episode_count:epCount}]:[],
-                overview:(media.description||'').replace(/<[^>]+>/g,'').replace(/&[a-z]+;/gi,''),
-                runtime:24,
-                videos:{results:tKey?[{key:tKey,site:'YouTube',type:'Trailer'}]:[]},
-                _anilistCast:(media.characters?.edges||[]).map(e=>({id:e.node.id,name:e.node.name?.full||'',character:'Main Character',_aniprofile:e.node.image?.large}))
-              };
-              item.name=media.title?.english||media.title?.romaji||item.name;
-              item.poster_path=media.coverImage?.extraLarge||media.coverImage?.large||item.poster_path;
-              item.overview=dd.overview;
-            }else{dd={};}
-          }else if(item.contentType==='movie'&&item.idMal!=null){
-            // Anime movie from AniList: search TMDB by title for full movie data
-            const qTitle=item.title||'';
-            const sr=await tmdb('/search/movie',{query:qTitle,page:1}).catch(()=>({results:[]}));
-            const match=sr.results&&sr.results[0];
-            if(match){
-              dd=await tmdb(`/movie/${match.id}`,{append_to_response:'external_ids,videos'}).catch(()=>({}));
-              item._tmdbId=match.id;
-            }else{dd={};}
-          }else{
-            const ep=(item.contentType==='tv'||item.contentType==='anime')?`/tv/${item.id}`:`/movie/${item.id}`;
-            dd=await tmdb(ep,{append_to_response:'external_ids,videos'});
-          }
+          const ep=(item.contentType==='tv'||item.contentType==='anime')?`/tv/${item.id}`:`/movie/${item.id}`;
+          dd=await tmdb(ep,{append_to_response:'external_ids,videos,credits'});
           detailCache[key]=dd;
         }catch{dd={};}
       }
@@ -6472,9 +6432,9 @@ async function openDetail(item){
   ]);
 
   if(dd.backdrop_path)$('dv-backdrop').src=`${IMG}/w1280${dd.backdrop_path}`;
-  else if(item.contentType==='anime'&&item.poster_path&&item.poster_path.startsWith('http'))$('dv-backdrop').src=item.poster_path;
+  else if(item.poster_path)$('dv-backdrop').src=item.poster_path.startsWith('http')?item.poster_path:`${IMG}/w500${item.poster_path}`;
   const genres=(dd.genres||[]).map(g=>g.name).join(', ');
-  const runtime=dd.runtime?`${dd.runtime}m`:'';
+  const runtime=dd.episode_run_time&&dd.episode_run_time.length?`${dd.episode_run_time[0]}m`:(dd.runtime?`${dd.runtime}m`:'');
   const seasons=dd.number_of_seasons;
   const imdbId=(dd.external_ids&&dd.external_ids.imdb_id)||dd.imdb_id||'';
   let meta='';
@@ -6497,24 +6457,15 @@ async function openDetail(item){
   $('dv-plot').textContent=dd.overview||item.overview||'No overview available.';
 
   const pi='<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" width="46" height="46"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
-  if(item.contentType==='anime'&&dd._anilistCast&&dd._anilistCast.length){
-    // Anime: use AniList characters as cast
-    $('dv-cast-section').style.display='block';
-    $('cast-grid').innerHTML=dd._anilistCast.map(cm=>{
-      const imgHtml=cm._aniprofile?'<img src="'+cm._aniprofile+'" alt="" loading="lazy" onerror="castImgFail(this)"><div class="cast-no-img" style="display:none">'+pi+'</div>':'<div class="cast-no-img">'+pi+'</div>';
-      return '<div class="cast-card"><div class="cast-img-wrap">'+imgHtml+'</div><div class="cast-name">'+cm.name+'</div><div class="cast-role">'+(cm.character||'')+'</div></div>';
+  const cast = ((dd.credits && dd.credits.cast) || (dd.cast) || []).slice(0, 20);
+  if (cast.length) {
+    $('dv-cast-section').style.display = 'block';
+    $('cast-grid').innerHTML = cast.map(cm => {
+      const imgHtml = cm.profile_path ? '<img src="' + IMG + '/w185' + cm.profile_path + '" alt="" loading="lazy" onerror="castImgFail(this)"><div class="cast-no-img" style="display:none">' + pi + '</div>' : '<div class="cast-no-img">' + pi + '</div>';
+      return '<div class="cast-card" onclick="openPerson(' + cm.id + ')"><div class="cast-img-wrap">' + imgHtml + '</div><div class="cast-name">' + cm.name + '</div><div class="cast-role">' + (cm.character || '') + '</div></div>';
     }).join('');
-  }else if(item.contentType!=='anime'){
-    const credId=item._tmdbId||item.id;
-    const credEp=item.contentType==='tv'?`/tv/${credId}/credits`:`/movie/${credId}/credits`;
-    tmdb(credEp).then(c=>{
-      const cast=(c.cast||[]).slice(0,20);if(!cast.length)return;
-      $('dv-cast-section').style.display='block';
-      $('cast-grid').innerHTML=cast.map(cm=>{
-        const imgHtml=cm.profile_path?'<img src="'+IMG+'/w185'+cm.profile_path+'" alt="" loading="lazy" onerror="castImgFail(this)"><div class="cast-no-img" style="display:none">'+pi+'</div>':'<div class="cast-no-img">'+pi+'</div>';
-        return '<div class="cast-card" onclick="openPerson('+cm.id+')"><div class="cast-img-wrap">'+imgHtml+'</div><div class="cast-name">'+cm.name+'</div><div class="cast-role">'+(cm.character||'')+'</div></div>';
-      }).join('');
-    }).catch(()=>{});
+  } else {
+    $('dv-cast-section').style.display = 'none';
   }
 }
 
@@ -6875,7 +6826,8 @@ function playServer(){
   let url='';
   if(ct==='anime'){
     const anp=admState.animePlayers[activeServer]||admState.animePlayers[0];
-    url=anp?anp.url.replace(/\{id\}/g,id).replace(/\{e\}/g,currentEp).replace(/\{ep\}/g,currentEp):`https://cinemaos.live/animeplayer/watch/${id}/${currentEp}`;
+    const rawUrl=(anp&&anp.url&&!anp.url.includes('animeplayer/watch'))?anp.url:'https://cinemaos.in/tv/watch/{id}?s={s}&e={e}';
+    url=rawUrl.replace(/\{id\}/g,id).replace(/\{s\}/g,currentSeason||1).replace(/\{e\}/g,currentEp).replace(/\{ep\}/g,currentEp);
   }
   else if(ct==='tv'){const srv=TV_SERVERS[activeServer-1]||TV_SERVERS[0];url=srv.url(id,currentSeason,currentEp);}
   else{const srv=MOVIE_SERVERS[activeServer]||MOVIE_SERVERS[0];url=srv.url(id);}
@@ -7022,7 +6974,11 @@ const DEFAULT_TV_PLAYERS = [
 ];
 
 const DEFAULT_ANIME_PLAYERS = [
-  {label:'Player 1', url:'https://cinemaos.live/animeplayer/watch/{id}/{e}'},
+  {label:'Player 1', url:'https://cinemaos.in/tv/watch/{id}?s={s}&e={e}'},
+  {label:'Player 2', url:'https://cinemaos.tech/player/{id}/{s}/{e}'},
+  {label:'Player 3', url:'https://embed.streammafia.to/embed/tv/{id}/{s}/{e}'},
+  {label:'Player 4', url:'https://vembed.click/play/{id}?s={s}&e={e}'},
+  {label:'Player 5', url:'https://multiembed.mov/?video_id={id}&s={s}&e={e}'}
 ];
 
 // Live admin state

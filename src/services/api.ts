@@ -160,27 +160,14 @@ export async function fetchMediaPage(type: 'movie' | 'tv' | 'anime', page: numbe
     return (data.results || []).map((r: any) => ({ ...r, contentType: 'tv' }));
   }
 
-  // Anime
-  const sortMap: Record<number, string[]> = {
-    1: ['TRENDING_DESC'],
-    2: ['START_DATE_DESC'],
-    3: ['POPULARITY_DESC'],
-  };
-  const alSort = sortMap[page] || ['POPULARITY_DESC'];
-  const alPage = page > 3 ? page - 2 : 1;
-  const items = await fetchAniList({ page: alPage, perPage: 30, sort: alSort });
-
-  if (page === 1 && ANILIST_DEFAULT_ID) {
-    try {
-      const feat = await fetchAniListById(ANILIST_DEFAULT_ID);
-      if (feat) {
-        return [feat, ...items.filter(i => i.id !== feat.id)];
-      }
-    } catch (e) {
-      // Ignore fallback
-    }
-  }
-  return items;
+  // Anime from TMDB
+  const data = await tmdb('/discover/tv', {
+    with_genres: '16',
+    with_original_language: 'ja',
+    sort_by: 'popularity.desc',
+    page,
+  });
+  return (data.results || []).map((r: any) => ({ ...r, contentType: 'anime' }));
 }
 
 export async function fetchTrendingAll(): Promise<MediaItem[]> {
@@ -207,79 +194,13 @@ export async function searchMulti(query: string) {
 }
 
 export async function fetchMediaDetail(item: MediaItem): Promise<MediaDetail> {
-  const isAnimeMovie = item.contentType === 'anime' && !!(item.title && !item.name);
-  if (item.contentType === 'anime' && !isAnimeMovie) {
-    const query = `
-      query($id: Int) {
-        Media(id: $id, type: ANIME) {
-          id
-          title { romaji english }
-          coverImage { extraLarge large }
-          episodes
-          averageScore
-          description(asHtml: false)
-          startDate { year }
-          genres
-          studios { nodes { name } }
-          trailer { id site }
-          characters(role: MAIN, sort: ID, page: 1, perPage: 12) {
-            edges {
-              node {
-                id
-                name { full }
-                image { large }
-              }
-              role
-            }
-          }
-        }
-      }
-    `;
-    const res = await fetch(ANILIST_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, variables: { id: item.id } }),
-    });
-    const d = await res.json();
-    const media = d?.data?.Media;
-    if (media) {
-      const tKey = media.trailer?.site === 'youtube' ? media.trailer.id : null;
-      const epCount = media.episodes || 0;
-      return {
-        genres: (media.genres || []).map((g: string) => ({ name: g })),
-        seasons: epCount ? [{ season_number: 1, episode_count: epCount }] : [],
-        overview: (media.description || '').replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ''),
-        runtime: 24,
-        videos: { results: tKey ? [{ key: tKey, site: 'YouTube', type: 'Trailer' }] : [] },
-        _anilistCast: (media.characters?.edges || []).map((e: any) => ({
-          id: e.node.id,
-          name: e.node.name?.full || '',
-          character: 'Main Character',
-          _aniprofile: e.node.image?.large,
-        })),
-      };
-    }
-    return {};
-  }
-
-  if (item.contentType === 'movie' && item.idMal != null) {
-    const qTitle = item.title || '';
-    const sr = await tmdb('/search/movie', { query: qTitle, page: 1 }).catch(() => ({ results: [] }));
-    const match = sr.results && sr.results[0];
-    if (match) {
-      item._tmdbId = match.id;
-      return await tmdb(`/movie/${match.id}`, { append_to_response: 'external_ids,videos' });
-    }
-    return {};
-  }
-
-  const endpoint = item.contentType === 'tv' ? `/tv/${item.id}` : `/movie/${item.id}`;
-  return await tmdb(endpoint, { append_to_response: 'external_ids,videos' });
+  const endpoint = (item.contentType === 'tv' || item.contentType === 'anime') ? `/tv/${item.id}` : `/movie/${item.id}`;
+  return await tmdb(endpoint, { append_to_response: 'external_ids,videos,credits' });
 }
 
 export async function fetchCast(item: MediaItem) {
   const credId = item._tmdbId || item.id;
-  const endpoint = item.contentType === 'tv' ? `/tv/${credId}/credits` : `/movie/${credId}/credits`;
+  const endpoint = (item.contentType === 'tv' || item.contentType === 'anime') ? `/tv/${credId}/credits` : `/movie/${credId}/credits`;
   const data = await tmdb(endpoint);
   return (data.cast || []).slice(0, 24);
 }
