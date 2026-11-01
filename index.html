@@ -6573,9 +6573,10 @@ function rebuildActionRow(){
     eb.onclick=()=>openAurl('download');row.appendChild(eb);
   }
 
-  // Dynamic Sandbox Toggle Button for the active video stream
+  // Dynamic Sandbox Toggle Button for the active video stream (not needed for anime where ad-block is off)
+  const isAnime = currentDetail && currentDetail.contentType === 'anime';
   const currentSrc = $('dv-iframe') ? $('dv-iframe').src : '';
-  if (currentSrc && currentSrc !== 'about:blank' && $('dv-player-wrap') && $('dv-player-wrap').style.display !== 'none') {
+  if (!isAnime && currentSrc && currentSrc !== 'about:blank' && $('dv-player-wrap') && $('dv-player-wrap').style.display !== 'none') {
     try {
       const parsedUrl = new URL(currentSrc);
       const host = parsedUrl.hostname;
@@ -6615,6 +6616,10 @@ let playerTrapLastInteraction = 0;
 // Localized window.open safety net: blocks rogue popup tabs while player trap is active
 const originalWindowOpen = window.open;
 window.open = function(url, target, features) {
+  // If anime is playing, keep ad-blocker off (allow all anime player popups/windows)
+  if (currentDetail && currentDetail.contentType === 'anime') {
+    return originalWindowOpen.apply(window, arguments);
+  }
   if (playerTrapClicksRemaining > 0 && $('detail-view') && $('detail-view').classList.contains('open')) {
     console.warn("Blocked rogue popup attempt during ad-trap window:", url);
     return null;
@@ -6647,6 +6652,11 @@ function updatePlayerOverlayUI() {
 }
 
 function armPlayerOverlay() {
+  // Keep ad blocker off for anime player (direct clicks, no ad-trap overlay)
+  if (currentDetail && currentDetail.contentType === 'anime') {
+    dismissPlayerOverlay();
+    return;
+  }
   playerTrapClicksRemaining = PLAYER_AD_TRAP_MAX_CLICKS;
   const overlay = $('player-click-overlay');
   if (overlay) {
@@ -6807,6 +6817,13 @@ function applyPlayerSandbox(url) {
   iframe.setAttribute('frameborder', '0');
   iframe.setAttribute('allowfullscreen', '');
   iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+
+  // For anime player: turn off sandbox and ad-block restrictions completely
+  if (currentDetail && currentDetail.contentType === 'anime') {
+    iframe.removeAttribute('sandbox');
+    console.info(`[GTC Player] Sandbox and ad-blocker off for anime player: ${url}`);
+    return;
+  }
 
   const bypassed = isDomainSandboxBypassed(url);
   if (bypassed) {
